@@ -78,6 +78,240 @@ PRINT "X[0]=";X[0], "X[1]=";X[1], "X[2]=";X[2]
 'X[0]=0 X[1]=111 X[2]=222
 'X[0]=0 X[1]=555 X[2]=222
 'X[0]=0 X[1]=555 X[2]=Two`
+				},
+				{ title:"Internal function DIM test", code:
+`' 内部関数テスト DIM関数
+VAR X[1,2,3,4,5,6,7,8,9]
+' 式中での呼び出し。DIM(x)は配列の次元、DIM(x,y)は配列の要素数
+PRINT "DIM(X)=";DIM(X), "DIM(X,1)=";DIM(X,1), "DIM(X,8)=";DIM(X,8)
+' 文での関数形式の呼び出し
+DIM(X) ' 結果は捨てられる
+'想定している実行結果
+'DIM(X)=9 DIM(X,1)=2 DIM(X,8)=9`
+				},
+				{ title:"Comparison test", code:
+`' 比較テスト
+PRINT "100 == 100",100==100
+PRINT "100 == 200",100==200
+PRINT "100 != 100",100!=100
+PRINT "100 != 200",100!=200
+PRINT "100 <  100",100<100
+PRINT "100 <  200",100<200
+PRINT "100 <= 100",100<=100
+PRINT "100 <= 200",100<=200
+PRINT "100 >  100",100>100
+PRINT "100 >  200",100>200
+PRINT "100 >= 100",100>=100
+PRINT "100 >= 200",100>=200
+'想定している実行結果
+'100 == 100 1
+'100 == 200 0
+'100 != 100 0
+'100 != 200 1
+'100 <  100 0
+'100 <  200 1
+'100 <= 100 1
+'100 <= 200 1
+'100 >  100 0
+'100 >  200 0
+'100 >= 100 1
+'100 >= 200 0`
+				},
+				{ title:"GOSUB test", code:
+`' GOSUBテスト
+GOSUB @label1
+GOSUB @label2
+GOSUB @label3
+GOSUB @label4
+END
+@label1:PRINT "@label1":RETURN
+@label2:PRINT "@label2":RETURN
+' 変則的なもの
+@label3:PRINT "@label3"
+@label4:PRINT "@label4"
+RETURN
+'想定している実行結果
+'@label1
+'@label2
+'@label3
+'@label4
+'@label4`
+				},
+				{ title:"FOR test", code:
+`' FOR文テスト
+VAR X, Y
+FOR Y = 1 TO 9
+	FOR X = 1 TO 9
+		PRINT "("; X; ","; Y; ") ";
+	NEXT
+	PRINT
+NEXT`
+				},
+				{ title:"LOOP test", code:
+`' LOOP文テスト
+OPTION DEFINT
+VAR X
+LOOP
+	IF !(X < 5) THEN BREAK
+	PRINT "X=";X
+	X = X + 1
+ENDLOOP`
+				},
+				{ title:"WHILE test", code:
+`' WHILE文テスト
+OPTION DEFINT
+VAR X
+WHILE X < 5
+	PRINT "X=";X
+	X = X + 1
+WEND`
+				},
+				{ title:"REPEAT test", code:
+`' REPEAT文テスト
+VAR X%
+REPEAT
+	PRINT "X=";X%
+	X% = X% + 1
+UNTIL X% >= 5`
+				},
+				{ title:"CASE test", code:
+`' CASE文テスト
+VAR X
+FOR X=1 TO 6
+	CASE X
+		WHEN 1:
+		WHEN 2: ' 1と2
+			PRINT "WHEN 1,2:X=";X
+		WHEN 3:
+			PRINT "WHEN 3:X=";X
+		WHEN 4:
+			PRINT "WHEN 4:X=";X
+		OTHERWISE:
+			PRINT "OTHERWISE X=";X
+	ENDCASE
+NEXT`
+				},
+				{ title:"Fizz,Buzz test", code:
+`' IF文テスト
+VAR I
+FOR I = 1 TO 15
+	PRINT I;":";
+	IF !(I MOD 3) && !(I MOD 5) THEN ' 3の倍数かつ5の倍数
+		PRINT "Fizz,Buzz"
+	ELSEIF !(I MOD 3) THEN ' 3の倍数
+		PRINT "Fizz"
+	ELSEIF !(I MOD 5) THEN ' 5の倍数
+		PRINT "Buzz"
+	ELSE
+		PRINT
+	ENDIF
+NEXT
+'想定している実行結果
+'1:
+'2:
+'3:Fizz
+'4:
+'5:Buzz
+'6:Fizz
+'7:
+'8:
+'9:Fizz
+'10:Buzz
+'11:
+'12:Fizz
+'13:
+'14:
+'15:Fizz,Buzz`
+				},
+				{ title:"CONST test", code:
+`' CONST文テスト
+CONST #X=1, #Y=2, #Z="hoge"
+PRINT "#X=";#X, "#Y=";#Y, "#Z=";#Z
+' 配列バージョン
+CONST #A[2,2]=[0,"ONE",2,3]
+PRINT "#A[2,2]="
+PRINT #A[0,0], #A[1,0]
+PRINT #A[0,1], #A[1,1]
+'想定している実行結果
+'#X=1 #Y=2 #Z=hoge
+'#A[2,2]=
+'0 ONE
+'2 3`
+				},
+				{ title:"ENUM test", code:
+`' ENUM文テスト
+VAR I=10
+ENUM #X=100, #Y, #Z, #A=I, #B, #C=#X+#B
+PRINT "#X=";#X, "#Y=";#Y, "#Z=";#Z
+PRINT "#A=";#A, "#B=";#B, "#C=";#C
+'想定している実行結果
+'#X=100 #Y=101 #Z=102
+'#A=10 #B=11 #C=111`
+				},
+				{ title:"LValue and operator[] test", code:
+`' 左辺値と[]演算子のテスト
+VAR X$[2] = ["abc", "012345"]
+X$[1][3] = "XY" ' 文字置き換え
+PRINT "X$[1]=";X$[1]
+VAR A,B,C
+A=B=C=10 ' 代入を演算子に
+PRINT "A,B,C=";A,B,C
+A=(B=C)=20 ' 変則テスト
+PRINT "A,B,C=";A,B,C
+'想定している実行結果
+'X$[1]=012XY5
+'A,B,C=10 10 10
+'A,B,C=20 20 10`
+				},
+				{ title:"User Function test1", code:
+`' 引数あり、返り値なしのテスト
+DEF FUNC A,B,C
+	PRINT "FUNC A=";A,"B=";B,"C=";C
+END
+VAR X="X", Y="Y", Z[]=[1,2,3]
+FUNC 1,"One",X
+FUNC 2,"Two",Y
+FUNC 3,"Three",Z[0]
+'想定している実行結果
+'FUNC A=1 B=One C=X
+'FUNC A=2 B=Two C=Y
+'FUNC A=3 B=Three C=1`
+				},
+				{ title:"User Function test2", code:
+`' 引数あり、返り値ありのテスト
+DEF ADD(A,B):RETURN A+B:END ' 加算
+DEF MUL(A,B):RETURN A*B:END ' 乗算
+PRINT ADD(1,2), MUL(1,2)
+PRINT ADD("ABC","XYZ")
+' 文字列と整数の加算
+PRINT ADD(111,"XYZ"), ADD("ABC",222)
+'文字列 * 整数は文字列を整数回繰り返したもの
+PRINT MUL("ABC",3)
+'想定している実行結果
+'3 2
+'ABCXYZ
+'111XYZ ABC222
+'ABCABCABC`
+				},
+				{ title:"User Function test3", code:
+`' 参照渡しのテスト
+DEF FUNC OUT A
+	PRINT "A=";A
+	A = A+100
+END
+' 普通の変数
+VAR X = 1
+FUNC OUT X
+PRINT "X=";X
+' 配列の要素
+VAR Y[] = [1,2,3,4]
+FUNC OUT Y[2]
+PRINT "Y[2]=";Y[2]
+'想定している実行結果
+'A=1
+'X=101
+'A=3
+'Y[2]=103`
 				}
 			];
 			
