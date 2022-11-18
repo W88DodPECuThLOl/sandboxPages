@@ -3,15 +3,16 @@
 	<head>
 		<meta charset=”UTF-8″>
 		<title>猫の砂場</title>
+		<script src="NekoBasic.js"></script>
 	</head>
 	<body>
 		<h1>Neko Basic</h1>
-		<div id="output" style="min-height: 240px;min-width: 400px;"></div>
-		<button onclick="clickSetSource()">Execute</button>
+		<tt><div id="wasmOutput" style="height: 240px;min-width: 400px;overflow-y: scroll;"></div></tt>
+		<button id="runningState">Execute</button>
 		<select id="sampleSelector">
 		</select>
 
-		<div id="editor" style="max-width: 500px;min-height: 240px"></div>
+		<div id="editor" style="max-width: 800px;min-height: 240px"></div>
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.2.0/ace.js"></script>
 		<script>
 			const editor = ace.edit("editor",{
@@ -19,27 +20,79 @@
 				mode: "ace/mode/text",
 				minLines: 2
 			});
-			editor.setFontSize(12);
-
+			editor.setFontSize(8);
+			
 			const samples = [
 				{ title:"Hello, World.", code:
 `PRINT "Hello, World."   ' 「Hello, World.」と表示し改行する`
 				},
-				{ title:"GOTO label", code:
+				{ title:"GOTO label test", code:
 `' GOTOテスト1 ラベルによる直接指定ジャンプ
 @label                  ' ラベル「@label」の定義
 PRINT "Hello, World."   ' 「Hello, World.」と表示し改行する。
 GOTO @label             ' ラベル「@label」へ飛ぶ`
+				},
+				{ title:"GOTO string test", code:
+`' GOTOテスト2 文字列による間接指定ジャンプ
+@label                  ' ラベル「@label」の定義
+PRINT "Hello, World."   ' 「Hello, World.」と表示し改行する。
+GOTO "@label"           ' 「@label」へ飛ぶ。文字列で飛び先のラベルを指定`
+				},
+				{ title:"Undefined variable test", code:
+`' 未定義の変数テスト
+PRINT "X#=";X#, "Y%=";Y%, "Z$=";Z$ ' X#は実数型、Y%は整数型、Z$は文字列型
+PRINT "A=";A                       ' 型指定がないAは、デフォルトで実数型に
+OPTION DEFINT                      ' 型指定がない場合を整数型に設定
+PRINT "B=";B                       ' Bは整数型になる
+'想定している実行結果
+'X#=0.000000 Y%=0 Z$=
+'A=0.000000
+'B=0`
+				},
+				{ title:"Arithmetic test", code:
+`' 四則演算テスト
+VAR X=1,Y=2,Z=3
+PRINT " X - Y  + Z=";X-Y+Z
+PRINT " X + Y  * Z=";X+Y*Z
+PRINT "(X + Y) * Z=";(X+Y)*Z ' ()の演算子の優先度変更
+PRINT "7  /  3=";7/3         ' 整数の割り算、結果は実数型
+PRINT "7 DIV 3=";7 DIV 3     ' 整数の割り算の商
+PRINT "7 MOD 3=";7 MOD 3     ' 整数の割り算の余り
+'想定している実行結果
+' X - Y  + Z=2
+' X + Y  * Z=7四則演算テスト
+'(X + Y) * Z=9
+'7  /  3=2.333333
+'7 DIV 3=2
+'7 MOD 3=1`
+				},
+				{ title:"Assignment test to array element", code:
+`' 配列要素への代入テスト
+VAR X[]=[0, 111, 222]                           ' 要素数3の1次元配列を初期値「0,111,222」で定義する
+PRINT "X[0]=";X[0], "X[1]=";X[1], "X[2]=";X[2]
+X[1]=555                                        ' 配列の要素1に555を設定
+PRINT "X[0]=";X[0], "X[1]=";X[1], "X[2]=";X[2]
+X[2]="Two"                                      ' 配列の要素2に「Two」の文字列を設定
+PRINT "X[0]=";X[0], "X[1]=";X[1], "X[2]=";X[2]
+'想定している実行結果
+'X[0]=0 X[1]=111 X[2]=222
+'X[0]=0 X[1]=555 X[2]=222
+'X[0]=0 X[1]=555 X[2]=Two`
 				}
 			];
 			
+			editor.setValue(samples[0].code, -1);
 			let selector = document.getElementById("sampleSelector");
 			for(let sample of samples) {
 				selector.appendChild(new Option(sample.title));
 			}
 			selector.onchange = event =>{
-				editor.setValue(samples[selector.selectedIndex].code);
+				editor.setValue(samples[selector.selectedIndex].code, -1);
 			}
+			let execBtn = document.getElementById("runningState");
+			execBtn.addEventListener('click', function() {
+				clickExecuteOrStop( editor.getValue() );
+			})
 		</script>
 	</body>
 </html>
