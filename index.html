@@ -1,13 +1,45 @@
 <!doctype html>
 <html>
 	<head>
-  	<meta charset=”UTF-8″>
-    <title>猫の砂場</title>
+		<meta charset=”UTF-8″>
+		<title>猫の砂場</title>
 	</head>
 	<body>
-		<h1>テストh1</h1>
-		<h2>テストh2</h2>
-		<h3>テストh2</h3>
-		<h4>テストh2</h4>
+		<h1>Neko Basic</h1>
+		<div id="output" style="min-height: 240px;min-width: 400px;"></div>
+		<button onclick="clickSetSource()">Execute</button>
+		<select id="sampleSelector">
+		</select>
+
+		<div id="editor" style="max-width: 500px;min-height: 240px"></div>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.2.0/ace.js"></script>
+		<script>
+			const editor = ace.edit("editor",{
+				theme: "ace/theme/monokai",
+				mode: "ace/mode/text",
+				minLines: 2
+			});
+			editor.setFontSize(12);
+
+			const samples = [
+				{ title:"Hello, World.", code:
+`PRINT "Hello, World."   ' 「Hello, World.」と表示し改行する`
+				},
+				{ title:"GOTO label", code:
+`' GOTOテスト1 ラベルによる直接指定ジャンプ
+@label                  ' ラベル「@label」の定義
+PRINT "Hello, World."   ' 「Hello, World.」と表示し改行する。
+GOTO @label             ' ラベル「@label」へ飛ぶ`
+				}
+			];
+			
+			let selector = document.getElementById("sampleSelector");
+			for(let sample of samples) {
+				selector.appendChild(new Option(sample.title));
+			}
+			selector.onchange = event =>{
+				editor.setValue(samples[selector.selectedIndex].code);
+			}
+		</script>
 	</body>
 </html>
