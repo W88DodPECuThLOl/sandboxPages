@@ -92,7 +92,7 @@ PRINT "7 DIV 3=";7 DIV 3     ' 整数の割り算の商
 PRINT "7 MOD 3=";7 MOD 3     ' 整数の割り算の余り
 '想定している実行結果
 ' X - Y  + Z=2
-' X + Y  * Z=7四則演算テスト
+' X + Y  * Z=7
 '(X + Y) * Z=9
 '7  /  3=2.333333
 '7 DIV 3=2
@@ -260,7 +260,7 @@ NEXT
 CONST #X=1, #Y=2, #Z="hoge"
 PRINT "#X=";#X, "#Y=";#Y, "#Z=";#Z
 ' 配列バージョン
-CONST #A[2,2]=[0,"ONE",2,3]
+CONST #A[2,2]=[0,"ONE",2,3.]
 PRINT "#A[2,2]="
 PRINT #A[0,0], #A[1,0]
 PRINT #A[0,1], #A[1,1]
@@ -268,17 +268,21 @@ PRINT #A[0,1], #A[1,1]
 '#X=1 #Y=2 #Z=hoge
 '#A[2,2]=
 '0 ONE
-'2 3`
+'2 3.000000`
 				},
 				{ title:"ENUM test", code:
 `' ENUM文テスト
+ENUM #X=100, #Y, #Z     ' #Y、#Zは1個前の値に+1したものになる
 VAR I=10
-ENUM #X=100, #Y, #Z, #A=I, #B, #C=#X+#B
+ENUM #A=I, #B, #C=#X+#B ' 変数でもOK
+ENUM #E=1.5, #F, #G     ' 実数でもOK。ただし文字列は意図しない結果になるので注意
 PRINT "#X=";#X, "#Y=";#Y, "#Z=";#Z
 PRINT "#A=";#A, "#B=";#B, "#C=";#C
+PRINT "#E=";#E, "#F=";#F, "#G=";#G
 '想定している実行結果
 '#X=100 #Y=101 #Z=102
-'#A=10 #B=11 #C=111`
+'#A=10 #B=11 #C=111
+'#E=1.500000 #F=2.500000 #G=3.500000`
 				},
 				{ title:"LValue and operator[] test", code:
 `' 左辺値と[]演算子のテスト
