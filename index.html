@@ -171,7 +171,6 @@ RETURN
 				},
 				{ title:"FOR test", code:
 `' FOR文テスト
-VAR X, Y
 FOR Y = 1 TO 9
 	FOR X = 1 TO 9
 		PRINT "("; X; ","; Y; ") ";
@@ -208,7 +207,6 @@ UNTIL X% >= 5`
 				},
 				{ title:"CASE test", code:
 `' CASE文テスト
-VAR X
 FOR X=1 TO 6
 	CASE X
 		WHEN 1:
@@ -225,7 +223,6 @@ NEXT`
 				},
 				{ title:"Fizz,Buzz test", code:
 `' IF文テスト
-VAR I
 FOR I = 1 TO 15
 	PRINT I;":";
 	IF !(I MOD 3) && !(I MOD 5) THEN ' 3の倍数かつ5の倍数
