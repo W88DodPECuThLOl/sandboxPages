@@ -26,6 +26,38 @@
 				{ title:"Hello, World.", code:
 `PRINT "Hello, World."   ' 「Hello, World.」と表示し改行する`
 				},
+				{ title:"integer value test", code:
+`' 整数テスト
+PRINT 0           ' 整数型の0
+PRINT 123         ' 10進数
+PRINT &H7B        ' "&H"を付けると16進数
+PRINT &O173       ' "&O"を付けると8進数
+PRINT &B01111011  ' "&B"を付けると2進数
+'想定している実行結果
+'0
+'123
+'123
+'123
+'123`
+				},
+				{ title:"float value test", code:
+`' 浮動小数点数のテスト
+PRINT 0.          ' 実数型の0
+PRINT 123.456789
+PRINT 123.
+PRINT .456789
+PRINT 1e2
+PRINT 1.23456789e2
+PRINT 123456789e-6
+'想定している実行結果
+'0.000000
+'123.456789
+'123.000000
+'0.456789
+'100.000000
+'123.456789
+'123.456789`
+				},
 				{ title:"GOTO label test", code:
 `' GOTOテスト1 ラベルによる直接指定ジャンプ
 @label                  ' ラベル「@label」の定義
