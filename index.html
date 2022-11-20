@@ -296,6 +296,27 @@ PRINT "A,B,C=";A,B,C
 'A,B,C=10 10 10
 'A,B,C=20 20 10`
 				},
+				{ title:"Read,Data and Restore test", code:
+`' READ、DATA、RESTOREテスト
+VAR V=10
+VAR A,B
+READ A,B:PRINT "A=";A,"B=";B
+READ A,B:PRINT "A=";A,"B=";B
+RESTORE @label ' 読み込み位置、変更
+READ A,B:PRINT "A=";A,"B=";B
+RESTORE "BEGIN" ' 読み込み位置を最初に
+V=20 ' DATAは式として登録しているので、面白いことができる
+READ A,B:PRINT "A=";A,"B=";B
+' データ
+DATA V,V+1 ' 式を評価するDATA
+@label
+DATA 12,13
+'想定している実行結果
+'A=10 B=11
+'A=12 B=13
+'A=12 B=13
+'A=20 B=21`
+				},
 				{ title:"User Function test1", code:
 `' 引数あり、返り値なしのテスト
 DEF FUNC A,B,C
