@@ -30,12 +30,7 @@ function clickExecuteOrStop(source) {
 		return;
 	}
 	oneLineText = "";
-
 	document.getElementById("wasmOutput").innerHTML = "";
-	let element = document.getElementById("editor");
-
-	var slotNo = 0;
-	//var source = element.value;
 
 	// ソースをUTF32に変換する
 	var len = source.length;
@@ -48,7 +43,9 @@ function clickExecuteOrStop(source) {
 	utf32[dst] = 0;
 	
 	// ソースを設定する
+	var slotNo = 0;
 	if(!wasmNekoBasic.NekoBasicSetSource(slotNo, 0, memPtr)) {
+		setRunning(0);
 		alert("設定に失敗しました。");
 		return;
 	}
@@ -67,7 +64,11 @@ function setup() {
 			// i32 ch
 			putchar: (ch) => {
 				if(ch!=10) {
-					oneLineText += String.fromCodePoint(ch);
+					if(ch==32) {
+						oneLineText += "&nbsp;";
+					} else {
+						oneLineText += String.fromCodePoint(ch);
+					}
 				} else {
 					document.getElementById("wasmOutput").innerHTML += oneLineText + "<br>";
 					oneLineText = "";
