@@ -91,9 +91,20 @@ function setup() {
 
 function update() {
 	if(isRunning) {
+		/*
 		// 1/60経過するまで、実行するようにしてみる
+		// メモ）240Hzのモニタで不安定になる……
 		const end = performance.now() + (1000.0/60.0);
 		while(end >= performance.now()){
+			if(!wasmNekoBasic.NekoBasicExecuteOneStep()) {
+				// 実行完了、または、失敗したので、停止する
+				setRunning(0);
+				return;
+			}
+		}
+		requestAnimationFrame(update);
+		*/
+		for(var i = 0; i < 100; ++i) {
 			if(!wasmNekoBasic.NekoBasicExecuteOneStep()) {
 				// 実行完了、または、失敗したので、停止する
 				setRunning(0);
