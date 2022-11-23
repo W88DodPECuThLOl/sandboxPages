@@ -77,6 +77,46 @@ function setup() {
 			// doubleを表示する
 			// f64 value
 			printDouble: (value) => { oneLineText += value.toFixed(6); }
+		},
+		core: {
+			date: () => {
+				const today = new Date();
+				// YYYYMMDD
+				return today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
+			},
+			time: () => {
+				// hhmmss
+				const today = new Date();
+				return today.getHours() * 10000 + today.getMinutes() * 100 + today.getSeconds();
+			}
+		},
+		Math: {
+			floor: (x) => Math.floor(x),
+			round: (x) => Math.round(x),
+			ceil: (x) => Math.ceil(x),
+			sqrt: (x) => Math.sqrt(x),
+			random: () => Math.random(),
+			exp: (x) => Math.exp(x),
+			pow: (x,y) => Math.pow(x, y),
+			log: (x) => Math.log(x),
+			log10: (x) => Math.log10(x),
+			log2: (x) => Math.log2(x),
+			sin: (x) => Math.sin(x),
+			cos: (x) => Math.cos(x),
+			tan: (x) => Math.tan(x),
+			asin: (x) => Math.asin(x),
+			acos: (x) => Math.acos(x),
+			atan: (x) => Math.atan(x),
+			atan2: (y,x) => Math.atan2(y,x),
+			sinh: (x) => Math.sinh(x),
+			cosh: (x) => Math.cosh(x),
+			tanh: (x) => Math.tanh(x),
+			isinf: (x) => {
+				if(x === Number.POSITIVE_INFINITY) return true;
+				if(x === Number.NEGATIVE_INFINITY) return true;
+				return false;
+			},
+			isNan: (x) => { return Number.isNaN() ? true : false; },
 		}
 	};
 	WebAssembly.instantiateStreaming(fetch("NekoBasic.wasm"), importObject).then(

@@ -366,6 +366,41 @@ PRINT "Y[2]=";Y[2]
 'X=101
 'A=3
 'Y[2]=103`
+				},
+				{ title:"Math Function test", code:
+`' 数学関数 テスト
+OPTION STRICT
+VAR A[] = [1,2,3,4,5,6,7,8]
+VAR X=1.5, Y=123
+PRINT "X=";X, "Y=";Y
+PRINT "INT(X)=";INT(X)      ' 整数に変換。切り捨て
+PRINT "FLOAT(Y)=";FLOAT(Y)  ' 実数に変換
+PRINT "FLOOR(X)=";FLOOR(X)
+PRINT "ROUND(X)=";ROUND(X)
+PRINT "CEIL(X)=";CEIL(X)
+PRINT "ABS(X)=";ABS(X), "ABS(-X)=";ABS(-X) ' 絶対値
+PRINT "SGN(X)=";SGN(X), "SGN(-X)=";SGN(-X) ' 符号
+PRINT "MIN(A)=";MIN(A), "MAX(A)=";MAX(A)
+PRINT "RND(10)=";RND(10), "RND(10)=";RND(10)
+PRINT "RNDF()=";RNDF(), "RNDF()=";RNDF()
+PRINT "SQR(2)=";SQR(2), "SQR(3)=";SQR(3)  ' 平方根
+PRINT "EXP()=";EXP(), "EXP(2)=";EXP(2)
+PRINT "POW(2,3)=";POW(2,3), "POW(10,4)=";POW(10,4)
+PRINT "LOG(2)=";LOG(2), "LOG(1000,10)=";LOG(1000,10)
+PRINT "RAD(180)=";RAD(180)
+PRINT "DEG(3.141592653)=";DEG(3.141592653)
+PRINT "SIN(0)=";SIN(0), "SIN(RAD(90))=";SIN(RAD(90))
+PRINT "COS(0)=";COS(0), "COS(RAD(90))=";COS(RAD(90))
+PRINT "TAN(0)=";TAN(0), "TAN(RAD(45))=";TAN(RAD(45))
+PRINT "ASIN(0)=";ASIN(0), "DEG(ASIN(1))=";DEG(ASIN(1))
+PRINT "DEG(ACOS(0))=";DEG(ACOS(0)), "ACOS(1)=";ACOS(1)
+PRINT "ATAN(1)=";DEG(ATAN(1))
+PRINT "DEG(ATAN(1,0))=";DEG(ATAN(1,0))
+PRINT "SINH(1)=";SINH(1)
+PRINT "COSH(1)=";COSH(1)
+PRINT "TANH(0.5)=";TANH(0.5)
+PRINT "CLASSIFY(1)=";CLASSIFY(1)  ' 普通の数は0
+PRINT "CLASSIFY(POW(10,500))=";CLASSIFY(POW(10,500)) ' ∞は1`
 				}
 			];
 			
