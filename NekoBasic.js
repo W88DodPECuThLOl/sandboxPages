@@ -76,7 +76,20 @@ function setup() {
 			},
 			// doubleを表示する
 			// f64 value
-			printDouble: (value) => { oneLineText += value.toFixed(6); }
+			printDouble: (value) => { oneLineText += value.toFixed(6); },
+			// 実数を指定された固定小数点形式で文字列に変換する
+			// f64 value
+			// s32 digits
+			// ret pointer
+			floatToString: (value, digits) => {
+				var source = value.toFixed(digits);
+				var memPtr = wasmNekoBasic.NekoBasicMalloc(source.length + 1);
+				var utf32 = new Uint32Array(memory.buffer, memPtr, source.length + 1);
+				var dst = 0;
+				for (let codePoint of source) { utf32[dst++] = codePoint.codePointAt(0); }
+				utf32[dst] = 0;
+				return memPtr;
+			},
 		},
 		core: {
 			date: () => {

@@ -401,6 +401,33 @@ PRINT "COSH(1)=";COSH(1)
 PRINT "TANH(0.5)=";TANH(0.5)
 PRINT "CLASSIFY(1)=";CLASSIFY(1)  ' 普通の数は0
 PRINT "CLASSIFY(POW(10,500))=";CLASSIFY(POW(10,500)) ' ∞は1`
+				},
+				{ title:"String Function test", code:
+`' 文字列関数テスト
+OPTION STRICT
+VAR A[] = [1,2,3,4,5,6,7,8]
+PRINT "ASC(" + CHR$(&H22) + "猫" + CHR$(&H22) + ")=";ASC("猫")
+PRINT "CHR$(ASC(" + CHR$(&H22) + "猫" + CHR$(&H22) + "))=";CHR$(ASC("猫"))
+PRINT "VAL(" + CHR$(&H22) + "123" + CHR$(&H22) + ")=";VAL("123"), "VAL(" + CHR$(&H22) + "1.23" + CHR$(&H22) + ")=";VAL("1.23")
+PRINT "VAL(" + CHR$(&H22) + "1e3" + CHR$(&H22) + ")=";VAL("1e3"), "VAL(" + CHR$(&H22) + "-1.23" + CHR$(&H22) + ")=";VAL("-1.23")
+PRINT "VAL(" + CHR$(&H22) + "-456" + CHR$(&H22) + ")=";VAL("-456"), "VAL(" + CHR$(&H22) + "+1.23" + CHR$(&H22) + ")=";VAL("+1.23")
+PRINT "STR$(12345)=";STR$(12345), "STR$(-12345)=";STR$(-12345)
+PRINT "STR$(0.12)=";STR$(0.12), "STR$(-1.23)=";STR$(-1.23)
+PRINT "STR$(123, 5)=[";STR$(123, 5);"]", "STR$(-123, 5)=[";STR$(-123, 5);"]"
+PRINT "HEX$(&H123, 4)=";HEX$(&H123, 4), "HEX$(-1)=";HEX$(-1)
+PRINT "BIN$(&H123, 8)=";BIN$(&H123, 16)
+PRINT "BIN$(-1)=";BIN$(-1)
+PRINT "LEN(A)=";LEN(A), "LAST(A)=";LAST(A)
+PRINT "MID$(" + CHR$(&H22) + "ABCDEFG" + CHR$(&H22) + ", 3)=";MID$("ABCDEFG",3)
+PRINT "MID$(" + CHR$(&H22) + "ABCDEFG" + CHR$(&H22) + ", 3, 2)=";MID$("ABCDEFG",3, 2)
+PRINT "LEFT$(" + CHR$(&H22) + "ABCDEFG" + CHR$(&H22) + ", 3)=";LEFT$("ABCDEFG",3)
+PRINT "RIGHT$(" + CHR$(&H22) + "ABCDEFG" + CHR$(&H22) + ", 3)=";RIGHT$("ABCDEFG",3)
+PRINT "INSTR(" + CHR$(&H22) + "ABCDEFG" + CHR$(&H22) + ", " + CHR$(&H22) + "CD" + CHR$(&H22) + ")=";INSTR("ABCDEFG","CD")
+PRINT "INSTR(3, " + CHR$(&H22) + "ABCDEFG" + CHR$(&H22) + ", " + CHR$(&H22) + "CD" + CHR$(&H22) + ")=";INSTR(3,"ABCDEFG","CD")
+PRINT "SUBST$(" + CHR$(&H22) + "ABCDEFG" + CHR$(&H22) + ", 1, " + CHR$(&H22) + "123" + CHR$(&H22) + ")=";SUBST$("ABCDEFG",1,"123")
+PRINT "SUBST$(" + CHR$(&H22) + "ABCDEFG" + CHR$(&H22) + ", 1, 2, " + CHR$(&H22) + "123" + CHR$(&H22) + ")=";SUBST$("ABCDEFG",1,2,"123")
+PRINT "DATE$()=";DATE$()
+PRINT "TIME$()=";TIME$()`
 				}
 			];
 			
