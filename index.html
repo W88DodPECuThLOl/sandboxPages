@@ -428,7 +428,61 @@ PRINT "SUBST$(" + CHR$(&H22) + "ABCDEFG" + CHR$(&H22) + ", 1, " + CHR$(&H22) + "
 PRINT "SUBST$(" + CHR$(&H22) + "ABCDEFG" + CHR$(&H22) + ", 1, 2, " + CHR$(&H22) + "123" + CHR$(&H22) + ")=";SUBST$("ABCDEFG",1,2,"123")
 PRINT "DATE$()=";DATE$()
 PRINT "TIME$()=";TIME$()`
-				}
+},
+{ title:"Format Function test - string", code:
+`' FORMATテスト 文字列の書式
+VAR X$ = "1234"
+PRINT "[12345678] string format test"
+PRINT FORMAT$("[%8S]", X$),CHR$(&H22);"[%8S]";CHR$(&H22)
+PRINT FORMAT$("[%-8S]", X$),CHR$(&H22);"[%-8S]";CHR$(&H22)
+PRINT FORMAT$("[%08S]", X$),CHR$(&H22);"[%08S]";CHR$(&H22)
+PRINT FORMAT$("[%8.6S]", X$),CHR$(&H22);"[%8.6S]";CHR$(&H22)
+PRINT FORMAT$("[%8.2S]", X$),CHR$(&H22);"[%8.2S]";CHR$(&H22)
+PRINT FORMAT$("[%-8.2S]", X$),CHR$(&H22);"[%-8.2S]";CHR$(&H22)
+PRINT FORMAT$("[%08.6S]", X$),CHR$(&H22);"[%08.6S]";CHR$(&H22)
+PRINT FORMAT$("[%08.2S]", X$),CHR$(&H22);"[%08.2S]";CHR$(&H22)`
+},
+{ title:"Format Function test - dec", code:
+`' FORMATテスト 10進数の書式
+VAR X=123
+PRINT "[123456] dec format test"
+PRINT FORMAT$("[%6D]", X),CHR$(&H22);"[%6D]";CHR$(&H22)
+PRINT FORMAT$("[%-6D]", X),CHR$(&H22);"[%-6D]";CHR$(&H22)
+PRINT FORMAT$("[%06D]", X),CHR$(&H22);"[%06D]";CHR$(&H22)
+PRINT FORMAT$("[%6.4D]", X),CHR$(&H22);"[%6.4D]";CHR$(&H22)
+PRINT FORMAT$("[%-6.4D]", X),CHR$(&H22);"[%-6.4D]";CHR$(&H22)`
+},
+{ title:"Format Function test - hex", code:
+`' FORMATテスト 16進数の書式
+VAR X=&HABC ' "&H"は16進数
+PRINT "[123456] hex format test"
+PRINT FORMAT$("[%6X]", X),CHR$(&H22);"[%6X]";CHR$(&H22)
+PRINT FORMAT$("[%-6X]", X),CHR$(&H22);"[%-6X]";CHR$(&H22)
+PRINT FORMAT$("[%06X]", X),CHR$(&H22);"[%06X]";CHR$(&H22)
+PRINT FORMAT$("[%6.4X]", X),CHR$(&H22);"[%6.4X]";CHR$(&H22)
+PRINT FORMAT$("[%-6.4X]", X),CHR$(&H22);"[%-6.4X]";CHR$(&H22)
+PRINT FORMAT$("[%6x]", X),CHR$(&H22);"[%6x]";CHR$(&H22) ' %xにするとA-Fが小文字に`
+},
+{ title:"Format Function test - oct", code:
+`' FORMATテスト 8進数の書式
+VAR X=&O123 ' "&O"は8進数
+PRINT "[123456] oct format test"
+PRINT FORMAT$("[%6O]", X),CHR$(&H22);"[%6O]";CHR$(&H22) ' "%O"は8進数の書式
+PRINT FORMAT$("[%-6O]", X),CHR$(&H22);"[%-6O]";CHR$(&H22)
+PRINT FORMAT$("[%06O]", X),CHR$(&H22);"[%06O]";CHR$(&H22)
+PRINT FORMAT$("[%6.4O]", X),CHR$(&H22);"[%6.4O]";CHR$(&H22)
+PRINT FORMAT$("[%-6.4O]", X),CHR$(&H22);"[%-6.4O]";CHR$(&H22)`
+},
+{ title:"Format Function test - bin", code:
+`' FORMATテスト 2進数の書式
+VAR X=&B10101010 ' "&B"は2進数
+PRINT "[123456789012] bin format test"
+PRINT FORMAT$("[%12B]", X),CHR$(&H22);"[%12B]";CHR$(&H22) ' "%B"は2進数の書式
+PRINT FORMAT$("[%-12B]", X),CHR$(&H22);"[%-12B]";CHR$(&H22)
+PRINT FORMAT$("[%012B]", X),CHR$(&H22);"[%012B]";CHR$(&H22)
+PRINT FORMAT$("[%12.10B]", X),CHR$(&H22);"[%12.10B]";CHR$(&H22)
+PRINT FORMAT$("[%-12.10B]", X),CHR$(&H22);"[%-12.10B]";CHR$(&H22)`
+}
 			];
 			
 			editor.setValue(samples[0].code, -1);

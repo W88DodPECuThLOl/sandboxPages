@@ -157,7 +157,7 @@ function update() {
 		}
 		requestAnimationFrame(update);
 		*/
-		for(var i = 0; i < 100; ++i) {
+		for(var i = 0; i < 200; ++i) {
 			if(!wasmNekoBasic.NekoBasicExecuteOneStep()) {
 				// 実行完了、または、失敗したので、停止する
 				setRunning(0);
