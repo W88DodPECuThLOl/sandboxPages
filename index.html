@@ -595,6 +595,32 @@ PRINT "X=";X, "Y=";Y
 'X=2 Y=11.000000
 'X=1 Y=10.000000`
 },
+{ title:"SHIFT test", code:
+`' SHIFTのテスト
+VAR X[]=[1,2,3,4,5]
+PRINT "SHIFT(X)=";SHIFT(X), "LEN(X)=";LEN(X)
+PRINT "SHIFT(X)=";SHIFT(X), "LEN(X)=";LEN(X)
+PRINT "SHIFT(X)=";SHIFT(X), "LEN(X)=";LEN(X)
+PRINT "SHIFT(X)=";SHIFT(X), "LEN(X)=";LEN(X)
+PRINT "SHIFT(X)=";SHIFT(X), "LEN(X)=";LEN(X)
+VAR A$="ABCDE"
+PRINT "SHIFT(A$)=";SHIFT(A$), "LEN(A$)=";LEN(A$)
+PRINT "SHIFT(A$)=";SHIFT(A$), "LEN(A$)=";LEN(A$)
+PRINT "SHIFT(A$)=";SHIFT(A$), "LEN(A$)=";LEN(A$)
+PRINT "SHIFT(A$)=";SHIFT(A$), "LEN(A$)=";LEN(A$)
+PRINT "SHIFT(A$)=";SHIFT(A$), "LEN(A$)=";LEN(A$)
+'想定している実行結果
+'SHIFT(X)=1 LEN(X)=4
+'SHIFT(X)=2 LEN(X)=3
+'SHIFT(X)=3 LEN(X)=2
+'SHIFT(X)=4 LEN(X)=1
+'SHIFT(X)=5 LEN(X)=0
+'SHIFT(A$)=A LEN(A$)=4
+'SHIFT(A$)=B LEN(A$)=3
+'SHIFT(A$)=C LEN(A$)=2
+'SHIFT(A$)=D LEN(A$)=1
+'SHIFT(A$)=E LEN(A$)=0`
+},
 			];
 			
 			editor.setValue(samples[0].code, -1);
