@@ -621,6 +621,32 @@ PRINT "SHIFT(A$)=";SHIFT(A$), "LEN(A$)=";LEN(A$)
 'SHIFT(A$)=D LEN(A$)=1
 'SHIFT(A$)=E LEN(A$)=0`
 },
+{ title:"FILL test", code:
+`' FILLのテスト
+OPTION DEFINT
+VAR X[6]
+PRINT_ARRAY(X)
+FILL X, 1
+PRINT_ARRAY(X)
+FILL X, 2, 1
+PRINT_ARRAY(X)
+FILL X, 3, 2, 3
+PRINT_ARRAY(X)
+' 配列の中身を表示するユーザ定義関数
+DEF PRINT_ARRAY(A)
+	VAR I
+	FOR I=0 TO LAST(A)
+		PRINT A[I],
+	NEXT
+	PRINT
+END
+'想定している実行結果
+'0 0 0 0 0 0
+'1 1 1 1 1 1
+'1 2 2 2 2 2
+'1 2 3 3 3 2`
+},
+
 			];
 			
 			editor.setValue(samples[0].code, -1);
