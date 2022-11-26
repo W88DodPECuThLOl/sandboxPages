@@ -537,7 +537,64 @@ PRINT "MAX(-100,X,Y,Z)=";MAX(-100,X,Y,Z) '配列も可、混ざっててもOK
 'MIN(1,2,3,4)=1 MAX(1,2,3,4)=4
 'MIN(100,X,Y,Z)=10
 'MAX(-100,X,Y,Z)=12`
-}
+},
+{ title:"SWAP test", code:
+`' SWAPのテスト
+VAR X=1, Y=2
+PRINT "X=";X, "Y=";Y
+SWAP X, Y
+PRINT "X=";X, "Y=";Y
+X=1.0:Y=2.0
+PRINT "X=";X, "Y=";Y
+SWAP X, Y
+PRINT "X=";X, "Y=";Y
+X="One":Y="Twoooo"
+PRINT "X=";X, "Y=";Y
+SWAP X, Y
+PRINT "X=";X, "Y=";Y
+'配列要素
+VAR A[]=[1,10,100], B[]=[2,20,200]
+PRINT "A[1]=";A[1], "B[2]=";B[2]
+SWAP A[1], B[2]
+PRINT "A[1]=";A[1], "B[2]=";B[2]
+'部分文字列
+VAR S$="12335", T$="ABCDEF"
+PRINT "S$[1]=";S$[1], "T$[2]=";T$[2]
+SWAP S$[1], T$[2]
+PRINT "S$[1]=";S$[1], "T$[2]=";T$[2]
+PRINT "S$=";S$, "T$=";T$
+'想定している実行結果
+'X=1 Y=2
+'X=2 Y=1
+'X=1.000000 Y=2.000000
+'X=2.000000 Y=1.000000
+'X=One Y=Twoooo
+'X=Twoooo Y=One
+'A[1]=10 B[2]=200
+'A[1]=200 B[2]=10
+'S$[1]=2 T$[2]=C
+'S$[1]=C T$[2]=2
+'S$=1C335 T$=AB2DEF`
+},
+{ title:"INC,DEC test", code:
+`' INC、DECのテスト
+VAR X=1, Y=10.0
+PRINT "X=";X, "Y=";Y
+INC X:INC Y
+PRINT "X=";X, "Y=";Y
+INC X, 2:INC Y, 2
+PRINT "X=";X, "Y=";Y
+DEC X, 2:DEC Y, 2
+PRINT "X=";X, "Y=";Y
+DEC X:DEC Y
+PRINT "X=";X, "Y=";Y
+'想定している実行結果
+'X=1 Y=10.000000
+'X=2 Y=11.000000
+'X=4 Y=13.000000
+'X=2 Y=11.000000
+'X=1 Y=10.000000`
+},
 			];
 			
 			editor.setValue(samples[0].code, -1);
@@ -552,6 +609,27 @@ PRINT "MAX(-100,X,Y,Z)=";MAX(-100,X,Y,Z) '配列も可、混ざっててもOK
 			execBtn.addEventListener('click', function() {
 				clickExecuteOrStop( editor.getValue() );
 			})
+const callbacks = {
+	output: (x)	=> document.getElementById("wasmOutput").innerHTML += x + "<br>",
+	stateChange: (state) => {
+		let runningState = document.getElementById("runningState");
+		if(state) {
+			document.getElementById("wasmOutput").innerHTML = "";
+			runningState.innerHTML = "Stop";
+		} else {
+			runningState.innerHTML = "Execute";
+		}
+	}
+};
+var nb = new NekoBasic(callbacks);
+function clickExecuteOrStop(source) {
+	if(!nb.isRunning) {
+		nb.setSource(0, "", source);
+		nb.run();
+	} else {
+		nb.stop();
+	}
+}
 		</script>
 	</body>
 </html>

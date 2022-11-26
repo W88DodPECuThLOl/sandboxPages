@@ -1,170 +1,224 @@
-var wasmNekoBasic;
+//export default 
+class NekoBasic {
+	wasmNekoBasic;
 
-// 使用するヒープサイズ
-var heapSize = 256*1024*1024; // 256MiB (64KiBの倍数であること)
-const memory = new WebAssembly.Memory({ initial: ~~(heapSize/(64*1024)), maximum: ~~(heapSize/(64*1024) + 1) });
+	// 使用するヒープサイズ(64KiBの倍数であること)
+	#heapSize = 256*1024*1024; // 256MiB
+	#memory;
 
-// 実行中かどうかのフラグ
-var isRunning = 0;
-var oneLineText = "";
+	// 実行中かどうかのフラグ
+	isRunning = 0;
+	#oneLineText = "";
 
-// 実行状態を設定する
-function setRunning(state)
-{
-	if(isRunning != state) {
-		let runningState = document.getElementById("runningState");
-		if(state) {
-			runningState.innerHTML = "Stop";
-		} else {
-			runningState.innerHTML = "Execute";
+	#handleAnimationFrame;
+
+	#callbackOutput;
+	#callbackStateChange;
+
+	/**
+	 * 文字列をNekoBasicで使用できる文字列へ変換する
+	 * @param {*} source 文字列
+	 * @returns NekoBasicで使用できる文字列へのポインタ
+	 */
+	#convertUTF32(source) {
+		// NekoBasic側からヒープを確保
+		const len = source.length;
+		const memPtr = this.wasmNekoBasic.NekoBasicMalloc(len + 1);
+		let utf32 = new Uint32Array(this.#memory.buffer, memPtr, len + 1);
+		// 確保したヒープに文字列を設定
+		let dst = 0;
+		for (let codePoint of source) {
+			utf32[dst++] = codePoint.codePointAt(0); // UTF32に変換する
 		}
-	}
-	isRunning = state;
-}
-
-// ソースを設定して実行する
-function clickExecuteOrStop(source) {
-	if(isRunning) {
-		// 実行中になら停止する
-		setRunning(0);
-		return;
-	}
-	oneLineText = "";
-	document.getElementById("wasmOutput").innerHTML = "";
-
-	// ソースをUTF32に変換する
-	var len = source.length;
-	var memPtr = wasmNekoBasic.NekoBasicMalloc(len + 1);
-	var utf32 = new Uint32Array(memory.buffer, memPtr, len + 1);
-	var dst = 0;
-	for (let codePoint of source) {
-		utf32[dst++] = codePoint.codePointAt(0);
-	}
-	utf32[dst] = 0;
-	
-	// ソースを設定する
-	var slotNo = 0;
-	if(!wasmNekoBasic.NekoBasicSetSource(slotNo, 0, memPtr)) {
-		setRunning(0);
-		alert("設定に失敗しました。");
-		return;
+		utf32[dst] = 0;
+		return memPtr;
 	}
 
-	// 実行開始
-	setRunning(1);
-	update();
-}
+	/**
+	 * ソースを設定する
+	 * @param {*} slotNo スロット番号
+	 * @param {*} memPtrFileName ファイル名
+	 * @param {*} memPtrSource ソースコード
+	 * @returns 処理結果
+	 */
+	#setSourceInternal(slotNo, memPtrFileName, memPtrSource)
+	{
+		// ソースを設定する
+		if(!this.wasmNekoBasic.NekoBasicSetSource(slotNo, fileName, memPtr)) {
+			// エラー
+			setRunning(0); // 実行していたら停止する
+			return false;
+		}
+		return true;
+	}
 
-function setup() {
-	setRunning(0);
-	const importObject = {
-		env: { memory: memory },
-		js: {
-			// UTF-32の文字を表示する
-			// i32 ch
-			putchar: (ch) => {
-				if(ch!=10) {
-					if(ch==32) {
-						oneLineText += "&nbsp;";
+	// 実行状態を設定する
+	#setRunning(state)
+	{
+		if(this.isRunning != state) {
+			if(this.#callbackStateChange) {
+				this.#callbackStateChange(state); // 実行状態を通知
+			}
+		}
+		this.isRunning = state;
+	}
+
+	#setup() {
+		const importObject = {
+			env: { memory: this.#memory },
+			js: {
+				// UTF-32の文字を表示する
+				// i32 ch
+				putchar: (ch) => {
+					if(ch!=10) {
+						if(ch==32) {
+							this.#oneLineText += "&nbsp;";
+						} else {
+							this.#oneLineText += String.fromCodePoint(ch);
+						}
 					} else {
-						oneLineText += String.fromCodePoint(ch);
+						if(this.#callbackOutput) {
+							this.#callbackOutput(this.#oneLineText)
+						}
+						this.#oneLineText = "";
 					}
-				} else {
-					document.getElementById("wasmOutput").innerHTML += oneLineText + "<br>";
-					oneLineText = "";
+				},
+				// doubleを表示する
+				// f64 value
+				printDouble: (value) => { this.#oneLineText += value.toFixed(6); },
+				// 実数を指定された固定小数点形式で文字列に変換する
+				// f64 value
+				// s32 digits
+				// ret pointer
+				floatToString: (value, digits) => {
+					const source = value.toFixed(digits);
+					const memPtr = this.wasmNekoBasic.NekoBasicMalloc(source.length + 1);
+					let utf32 = new Uint32Array(this.#memory.buffer, memPtr, source.length + 1);
+					let dst = 0;
+					for (let codePoint of source) { utf32[dst++] = codePoint.codePointAt(0); }
+					utf32[dst] = 0;
+					return memPtr;
+				},
+			},
+			core: {
+				date: () => {
+					const today = new Date();
+					// YYYYMMDD
+					return today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
+				},
+				time: () => {
+					// hhmmss
+					const today = new Date();
+					return today.getHours() * 10000 + today.getMinutes() * 100 + today.getSeconds();
 				}
 			},
-			// doubleを表示する
-			// f64 value
-			printDouble: (value) => { oneLineText += value.toFixed(6); },
-			// 実数を指定された固定小数点形式で文字列に変換する
-			// f64 value
-			// s32 digits
-			// ret pointer
-			floatToString: (value, digits) => {
-				var source = value.toFixed(digits);
-				var memPtr = wasmNekoBasic.NekoBasicMalloc(source.length + 1);
-				var utf32 = new Uint32Array(memory.buffer, memPtr, source.length + 1);
-				var dst = 0;
-				for (let codePoint of source) { utf32[dst++] = codePoint.codePointAt(0); }
-				utf32[dst] = 0;
-				return memPtr;
-			},
-		},
-		core: {
-			date: () => {
-				const today = new Date();
-				// YYYYMMDD
-				return today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
-			},
-			time: () => {
-				// hhmmss
-				const today = new Date();
-				return today.getHours() * 10000 + today.getMinutes() * 100 + today.getSeconds();
+			Math: {
+				floor: (x) => Math.floor(x),
+				round: (x) => Math.round(x),
+				ceil: (x) => Math.ceil(x),
+				sqrt: (x) => Math.sqrt(x),
+				random: () => Math.random(),
+				exp: (x) => Math.exp(x),
+				pow: (x,y) => Math.pow(x, y),
+				log: (x) => Math.log(x),
+				log10: (x) => Math.log10(x),
+				log2: (x) => Math.log2(x),
+				sin: (x) => Math.sin(x),
+				cos: (x) => Math.cos(x),
+				tan: (x) => Math.tan(x),
+				asin: (x) => Math.asin(x),
+				acos: (x) => Math.acos(x),
+				atan: (x) => Math.atan(x),
+				atan2: (y,x) => Math.atan2(y,x),
+				sinh: (x) => Math.sinh(x),
+				cosh: (x) => Math.cosh(x),
+				tanh: (x) => Math.tanh(x),
+				isinf: (x) => {
+					if(x === Number.POSITIVE_INFINITY) return true;
+					if(x === Number.NEGATIVE_INFINITY) return true;
+					return false;
+				},
+				isNan: (x) => { return Number.isNaN() ? true : false; },
 			}
-		},
-		Math: {
-			floor: (x) => Math.floor(x),
-			round: (x) => Math.round(x),
-			ceil: (x) => Math.ceil(x),
-			sqrt: (x) => Math.sqrt(x),
-			random: () => Math.random(),
-			exp: (x) => Math.exp(x),
-			pow: (x,y) => Math.pow(x, y),
-			log: (x) => Math.log(x),
-			log10: (x) => Math.log10(x),
-			log2: (x) => Math.log2(x),
-			sin: (x) => Math.sin(x),
-			cos: (x) => Math.cos(x),
-			tan: (x) => Math.tan(x),
-			asin: (x) => Math.asin(x),
-			acos: (x) => Math.acos(x),
-			atan: (x) => Math.atan(x),
-			atan2: (y,x) => Math.atan2(y,x),
-			sinh: (x) => Math.sinh(x),
-			cosh: (x) => Math.cosh(x),
-			tanh: (x) => Math.tanh(x),
-			isinf: (x) => {
-				if(x === Number.POSITIVE_INFINITY) return true;
-				if(x === Number.NEGATIVE_INFINITY) return true;
-				return false;
-			},
-			isNan: (x) => { return Number.isNaN() ? true : false; },
-		}
-	};
-	WebAssembly.instantiateStreaming(fetch("NekoBasic.wasm"), importObject).then(
-		(obj) => {
-			wasmNekoBasic = obj.instance.exports;
-			// 初期化
-			obj.instance.exports._Z9setupHeapPvm(obj.instance.exports.__heap_base, heapSize - obj.instance.exports.__heap_base);
-			wasmNekoBasic.NekoBasicInitialize();
-		}
-	);
-}
+		};
+		WebAssembly.instantiateStreaming(fetch("NekoBasic.wasm"), importObject).then(
+			(obj) => {
+				this.wasmNekoBasic = obj.instance.exports;
+				// 初期化
+				this.wasmNekoBasic._Z9setupHeapPvm(this.wasmNekoBasic.__heap_base, this.#heapSize - this.wasmNekoBasic.__heap_base);
+				this.wasmNekoBasic.NekoBasicInitialize();
+			}
+		);
+	}
 
-function update() {
-	if(isRunning) {
-		/*
-		// 1/60経過するまで、実行するようにしてみる
-		// メモ）240Hzのモニタで不安定になる……
-		const end = performance.now() + (1000.0/60.0);
-		while(end >= performance.now()){
-			if(!wasmNekoBasic.NekoBasicExecuteOneStep()) {
-				// 実行完了、または、失敗したので、停止する
-				setRunning(0);
-				return;
+	/**
+	 * 更新処理
+	 * @returns 
+	 */
+	#update() {
+		if(this.isRunning) {
+			for(var i = 0; i < 200; ++i) {
+				if(!this.wasmNekoBasic.NekoBasicExecuteOneStep()) {
+					// 実行完了、または、失敗したので、停止する
+					this.#setRunning(0);
+					return;
+				}
 			}
+			this.#handleAnimationFrame = requestAnimationFrame(()=> this.#update());
 		}
-		requestAnimationFrame(update);
-		*/
-		for(var i = 0; i < 200; ++i) {
-			if(!wasmNekoBasic.NekoBasicExecuteOneStep()) {
-				// 実行完了、または、失敗したので、停止する
-				setRunning(0);
-				return;
-			}
+	}
+
+	/**
+	 * ソースを設定する
+	 * @param {*} slotNo スロット番号
+	 * @param {*} memPtrFileName ファイル名
+	 * @param {*} memPtrSource ソースコード
+	 * @returns 処理結果
+	 */
+	 setSource(slotNo, filename, source)
+	 {
+		// 文字列をNekoBasicで使えるように変換
+		const memPtrFilename = this.#convertUTF32(filename);
+		const memPtrSource = this.#convertUTF32(source);
+		 // ソースを設定する
+		 if(!this.wasmNekoBasic.NekoBasicSetSource(slotNo, memPtrFilename, memPtrSource)) {
+			 // エラー
+			 this.#setRunning(0); // 実行していたら停止する
+			 return false;
+		 }
+		 return true;
+	 }
+
+	 /**
+	 * 実行する
+	 * @returns 
+	 */
+	 run() {
+		if(this.isRunning) {
+			return; // 既に実行中
 		}
-		requestAnimationFrame(update);
+
+		// 初期化
+		this.#oneLineText = "";
+
+		// 実行開始
+		this.#setRunning(1);
+		this.#handleAnimationFrame = requestAnimationFrame(()=>this.#update());
+	}
+
+	/**
+	 * 停止する
+	 */
+	stop() {
+		this.#setRunning(0);
+		cancelAnimationFrame(this.#handleAnimationFrame);
+	}
+
+	constructor(callbacks)
+	{
+		this.#callbackOutput = callbacks.output;
+		this.#callbackStateChange = callbacks.stateChange;
+		this.#memory = new WebAssembly.Memory({ initial: ~~(this.#heapSize/(64*1024)), maximum: ~~(this.#heapSize/(64*1024) + 1) });
+		this.#setup();
 	}
 }
-setup();
