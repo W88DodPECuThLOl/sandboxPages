@@ -482,6 +482,46 @@ PRINT FORMAT$("[%-12B]", X),CHR$(&H22);"[%-12B]";CHR$(&H22)
 PRINT FORMAT$("[%012B]", X),CHR$(&H22);"[%012B]";CHR$(&H22)
 PRINT FORMAT$("[%12.10B]", X),CHR$(&H22);"[%12.10B]";CHR$(&H22)
 PRINT FORMAT$("[%-12.10B]", X),CHR$(&H22);"[%-12.10B]";CHR$(&H22)`
+},
+{ title:"Format Function test - char", code:
+`' FORMATテスト 文字の書式
+PRINT "[1234] char format test" ' "%C"でコードポイント
+PRINT FORMAT$("[%4C]", ASC("A")),CHR$(&H22);"[%4C]";CHR$(&H22)
+PRINT FORMAT$("[%-4C]", ASC("B")),CHR$(&H22);"[%-4C]";CHR$(&H22)
+PRINT FORMAT$("[%4C]", ASC("猫")),CHR$(&H22);"[%4C]";CHR$(&H22) ' @todo 全角の幅`
+},
+{ title:"Format Function test - real", code:
+`' FORMATテスト 実数の書式
+VAR X=1234.456789
+PRINT "[1234567890123456] real format test" ' "%F"で実数の書式
+PRINT FORMAT$("[%16F]", X),CHR$(&H22);"[%16F]";CHR$(&H22)
+PRINT FORMAT$("[%016F]", X),CHR$(&H22);"[%016F]";CHR$(&H22)
+PRINT FORMAT$("[%+16F]", X),CHR$(&H22);"[%+16F]";CHR$(&H22)
+PRINT FORMAT$("[%+016F]", X),CHR$(&H22);"[%+016F]";CHR$(&H22)
+PRINT FORMAT$("[%-16F]", X),CHR$(&H22);"[%-16F]";CHR$(&H22)
+PRINT FORMAT$("[%16.2F]", X),CHR$(&H22);"[%16.2F]";CHR$(&H22)
+PRINT FORMAT$("[%016.2F]", X),CHR$(&H22);"[%016.2F]";CHR$(&H22)
+PRINT FORMAT$("[%+16.2F]", X),CHR$(&H22);"[%+16.2F]";CHR$(&H22)
+PRINT FORMAT$("[%-16.2F]", X),CHR$(&H22);"[%-16.2F]";CHR$(&H22)
+PRINT FORMAT$("[%16.10F]", X),CHR$(&H22);"[%16.10F]";CHR$(&H22)
+PRINT FORMAT$("[%016.10F]", X),CHR$(&H22);"[%016.10F]";CHR$(&H22)
+PRINT FORMAT$("[%+16.10F]", X),CHR$(&H22);"[%+16.10F]";CHR$(&H22)
+PRINT FORMAT$("[%-16.10F]", X),CHR$(&H22);"[%-16.10F]";CHR$(&H22)
+'想定している実行結果
+'[1234567890123456] real format test
+'[     1234.456789] "[%16F]"
+'[000001234.456789] "[%016F]"
+'[    +1234.456789] "[%+16F]"
+'[+00001234.456789] "[%+016F]"
+'[1234.456789     ] "[%-16F]"
+'[         1234.46] "[%16.2F]"
+'[0000000001234.46] "[%016.2F]"
+'[        +1234.46] "[%+16.2F]"
+'[1234.46         ] "[%-16.2F]"
+'[ 1234.4567890000] "[%16.10F]"
+'[01234.4567890000] "[%016.10F]"
+'[+1234.4567890000] "[%+16.10F]"
+'[1234.4567890000 ] "[%-16.10F]"`
 }
 			];
 			
