@@ -578,15 +578,16 @@ PRINT "S$=";S$, "T$=";T$
 },
 { title:"INC,DEC test", code:
 `' INC、DECのテスト
+' 変数の値を加算(INC)、減算(DEC)する
 VAR X=1, Y=10.0
 PRINT "X=";X, "Y=";Y
-INC X:INC Y
+INC X:INC Y           ' 1加算
 PRINT "X=";X, "Y=";Y
-INC X, 2:INC Y, 2
+INC X, 2:INC Y, 2     ' 2加算
 PRINT "X=";X, "Y=";Y
-DEC X, 2:DEC Y, 2
+DEC X, 2:DEC Y, 2     ' 2減算
 PRINT "X=";X, "Y=";Y
-DEC X:DEC Y
+DEC X:DEC Y           ' 1減算
 PRINT "X=";X, "Y=";Y
 '想定している実行結果
 'X=1 Y=10.000000
@@ -595,8 +596,45 @@ PRINT "X=";X, "Y=";Y
 'X=2 Y=11.000000
 'X=1 Y=10.000000`
 },
+{ title:"UNSHIFT test", code:
+`' UNSHIFTのテスト
+' 最初に要素を追加する
+VAR X[]
+UNSHIFT X, 1:PRINT_ARRAY X
+UNSHIFT X, 2:PRINT_ARRAY X
+UNSHIFT X, 3:PRINT_ARRAY X
+UNSHIFT X, 4:PRINT_ARRAY X
+UNSHIFT X, 5:PRINT_ARRAY X
+VAR A$
+' 対象が文字列の場合、最初に文字を追加する
+UNSHIFT A$, "A":PRINT_ARRAY A$
+UNSHIFT A$, "B":PRINT_ARRAY A$
+UNSHIFT A$, "C":PRINT_ARRAY A$
+UNSHIFT A$, "D":PRINT_ARRAY A$
+UNSHIFT A$, "E":PRINT_ARRAY A$
+' 配列の中身を表示するユーザ定義関数
+DEF PRINT_ARRAY A
+	VAR I
+	FOR I=0 TO LAST(A)
+		PRINT A[I],
+	NEXT
+	PRINT
+END
+'想定している実行結果
+'1
+'2 1
+'3 2 1
+'4 3 2 1
+'5 4 3 2 1
+'A
+'B A
+'C B A
+'D C B A
+'E D C B A`
+},
 { title:"SHIFT test", code:
 `' SHIFTのテスト
+' 最初の要素を取得し、最初の要素を削除する
 VAR X[]=[1,2,3,4,5]
 PRINT "SHIFT(X)=";SHIFT(X), "LEN(X)=";LEN(X)
 PRINT "SHIFT(X)=";SHIFT(X), "LEN(X)=";LEN(X)
@@ -604,6 +642,7 @@ PRINT "SHIFT(X)=";SHIFT(X), "LEN(X)=";LEN(X)
 PRINT "SHIFT(X)=";SHIFT(X), "LEN(X)=";LEN(X)
 PRINT "SHIFT(X)=";SHIFT(X), "LEN(X)=";LEN(X)
 VAR A$="ABCDE"
+' 対象が文字列の場合、最初の文字を取得し削除する
 PRINT "SHIFT(A$)=";SHIFT(A$), "LEN(A$)=";LEN(A$)
 PRINT "SHIFT(A$)=";SHIFT(A$), "LEN(A$)=";LEN(A$)
 PRINT "SHIFT(A$)=";SHIFT(A$), "LEN(A$)=";LEN(A$)
@@ -623,14 +662,16 @@ PRINT "SHIFT(A$)=";SHIFT(A$), "LEN(A$)=";LEN(A$)
 },
 { title:"FILL test", code:
 `' FILLのテスト
-OPTION DEFINT
-VAR X[6]
+' 配列要素を指定された値で、埋める
+OPTION DEFINT   ' デフォルトを整数型に
+VAR X[6]        ' 整数型の1次元6要素
+                ' 初期値は整数の0
 PRINT_ARRAY(X)
-FILL X, 1
+FILL X, 1       ' 全部1で埋める
 PRINT_ARRAY(X)
-FILL X, 2, 1
+FILL X, 2, 1    'X[1]から最後まで2で埋める
 PRINT_ARRAY(X)
-FILL X, 3, 2, 3
+FILL X, 3, 2, 3 'X[2]から3個、3で埋める
 PRINT_ARRAY(X)
 ' 配列の中身を表示するユーザ定義関数
 DEF PRINT_ARRAY(A)
