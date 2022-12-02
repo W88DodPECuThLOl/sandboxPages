@@ -4,725 +4,187 @@
 		<meta charset=”UTF-8″>
 		<title>猫の砂場</title>
 		<script src="NekoBasic.js"></script>
+		<script src="jszip.min.js"></script>
+		<script src="jszip-utils.min.js"></script>
 	</head>
 	<body>
 		<h1>Neko Basic</h1>
 		<tt><div id="wasmOutput" style="height: 240px;min-width: 400px;overflow-y: scroll;"></div></tt>
+		<input type="file" id="projectSelect" accept=".zip">
+		<select id="fileSelector"></select>
 		<button id="runningState">Execute</button>
-		<select id="sampleSelector">
-		</select>
 
 		<div id="editor" style="max-width: 800px;min-height: 240px"></div>
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.2.0/ace.js"></script>
 		<script>
-			const editor = ace.edit("editor",{
+			// エディタ初期化
+			var editor = ace.edit("editor",{
 				theme: "ace/theme/monokai",
 				mode: "ace/mode/text",
 				minLines: 2
 			});
 			editor.setFontSize(8);
 			
-			const samples = [
-				{ title:"Hello, World.", code:
-`PRINT "Hello, World."   ' 「Hello, World.」と表示し改行する`
-				},
-				{ title:"integer value test", code:
-`' 整数テスト
-PRINT 0           ' 整数型の0
-PRINT 123         ' 10進数
-PRINT &H7B        ' "&H"を付けると16進数
-PRINT &O173       ' "&O"を付けると8進数
-PRINT &B01111011  ' "&B"を付けると2進数
-'想定している実行結果
-'0
-'123
-'123
-'123
-'123`
-				},
-				{ title:"float value test", code:
-`' 浮動小数点数のテスト
-PRINT 0.          ' 実数型の0
-PRINT 123.456789
-PRINT 123.
-PRINT .456789
-PRINT 1e2
-PRINT 1.23456789e2
-PRINT 123456789e-6
-'想定している実行結果
-'0.000000
-'123.456789
-'123.000000
-'0.456789
-'100.000000
-'123.456789
-'123.456789`
-				},
-				{ title:"GOTO label test", code:
-`' GOTOテスト1 ラベルによる直接指定ジャンプ
-@label                  ' ラベル「@label」の定義
-PRINT "Hello, World."   ' 「Hello, World.」と表示し改行する。
-GOTO @label             ' ラベル「@label」へ飛ぶ`
-				},
-				{ title:"GOTO string test", code:
-`' GOTOテスト2 文字列による間接指定ジャンプ
-@label                  ' ラベル「@label」の定義
-PRINT "Hello, World."   ' 「Hello, World.」と表示し改行する。
-GOTO "@label"           ' 「@label」へ飛ぶ。文字列で飛び先のラベルを指定`
-				},
-				{ title:"Undefined variable test", code:
-`' 未定義の変数テスト
-PRINT "X#=";X#, "Y%=";Y%, "Z$=";Z$ ' X#は実数型、Y%は整数型、Z$は文字列型
-PRINT "A=";A                       ' 型指定がないAは、デフォルトで実数型に
-OPTION DEFINT                      ' 型指定がない場合を整数型に設定
-PRINT "B=";B                       ' Bは整数型になる
-'想定している実行結果
-'X#=0.000000 Y%=0 Z$=
-'A=0.000000
-'B=0`
-				},
-				{ title:"Arithmetic test", code:
-`' 四則演算テスト
-VAR X=1,Y=2,Z=3
-PRINT " X - Y  + Z=";X-Y+Z
-PRINT " X + Y  * Z=";X+Y*Z
-PRINT "(X + Y) * Z=";(X+Y)*Z ' ()の演算子の優先度変更
-PRINT "7  /  3=";7/3         ' 整数の割り算、結果は実数型
-PRINT "7 DIV 3=";7 DIV 3     ' 整数の割り算の商
-PRINT "7 MOD 3=";7 MOD 3     ' 整数の割り算の余り
-'想定している実行結果
-' X - Y  + Z=2
-' X + Y  * Z=7
-'(X + Y) * Z=9
-'7  /  3=2.333333
-'7 DIV 3=2
-'7 MOD 3=1`
-				},
-				{ title:"Assignment test to array element", code:
-`' 配列要素への代入テスト
-VAR X[]=[0, 111, 222]                           ' 要素数3の1次元配列を初期値「0,111,222」で定義する
-PRINT "X[0]=";X[0], "X[1]=";X[1], "X[2]=";X[2]
-X[1]=555                                        ' 配列の要素1に555を設定
-PRINT "X[0]=";X[0], "X[1]=";X[1], "X[2]=";X[2]
-X[2]="Two"                                      ' 配列の要素2に「Two」の文字列を設定
-PRINT "X[0]=";X[0], "X[1]=";X[1], "X[2]=";X[2]
-'想定している実行結果
-'X[0]=0 X[1]=111 X[2]=222
-'X[0]=0 X[1]=555 X[2]=222
-'X[0]=0 X[1]=555 X[2]=Two`
-				},
-				{ title:"Internal function DIM test", code:
-`' 内部関数テスト DIM関数
-VAR X[1,2,3,4,5,6,7,8,9]
-' 式中での呼び出し。DIM(x)は配列の次元、DIM(x,y)は配列の要素数
-PRINT "DIM(X)=";DIM(X), "DIM(X,1)=";DIM(X,1), "DIM(X,8)=";DIM(X,8)
-' 文での関数形式の呼び出し
-DIM(X) ' 結果は捨てられる
-'想定している実行結果
-'DIM(X)=9 DIM(X,1)=2 DIM(X,8)=9`
-				},
-				{ title:"Comparison test", code:
-`' 比較テスト
-PRINT "100 == 100",100==100
-PRINT "100 == 200",100==200
-PRINT "100 != 100",100!=100
-PRINT "100 != 200",100!=200
-PRINT "100 <  100",100<100
-PRINT "100 <  200",100<200
-PRINT "100 <= 100",100<=100
-PRINT "100 <= 200",100<=200
-PRINT "100 >  100",100>100
-PRINT "100 >  200",100>200
-PRINT "100 >= 100",100>=100
-PRINT "100 >= 200",100>=200
-'想定している実行結果
-'100 == 100 1
-'100 == 200 0
-'100 != 100 0
-'100 != 200 1
-'100 <  100 0
-'100 <  200 1
-'100 <= 100 1
-'100 <= 200 1
-'100 >  100 0
-'100 >  200 0
-'100 >= 100 1
-'100 >= 200 0`
-				},
-				{ title:"GOSUB test", code:
-`' GOSUBテスト
-GOSUB @label1
-GOSUB @label2
-GOSUB @label3
-GOSUB @label4
-END
-@label1:PRINT "@label1":RETURN
-@label2:PRINT "@label2":RETURN
-' 変則的なもの
-@label3:PRINT "@label3"
-@label4:PRINT "@label4"
-RETURN
-'想定している実行結果
-'@label1
-'@label2
-'@label3
-'@label4
-'@label4`
-				},
-				{ title:"FOR test", code:
-`' FOR文テスト
-FOR Y = 1 TO 9
-	FOR X = 1 TO 9
-		PRINT "("; X; ","; Y; ") ";
-	NEXT
-	PRINT
-NEXT`
-				},
-				{ title:"LOOP test", code:
-`' LOOP文テスト
-OPTION DEFINT
-VAR X
-LOOP
-	IF !(X < 5) THEN BREAK
-	PRINT "X=";X
-	X = X + 1
-ENDLOOP`
-				},
-				{ title:"WHILE test", code:
-`' WHILE文テスト
-OPTION DEFINT
-VAR X
-WHILE X < 5
-	PRINT "X=";X
-	X = X + 1
-WEND`
-				},
-				{ title:"REPEAT test", code:
-`' REPEAT文テスト
-VAR X%
-REPEAT
-	PRINT "X=";X%
-	X% = X% + 1
-UNTIL X% >= 5`
-				},
-				{ title:"CASE test", code:
-`' CASE文テスト
-FOR X=1 TO 6
-	CASE X
-		WHEN 1:
-		WHEN 2: ' 1と2
-			PRINT "WHEN 1,2:X=";X
-		WHEN 3:
-			PRINT "WHEN 3:X=";X
-		WHEN 4:
-			PRINT "WHEN 4:X=";X
-		OTHERWISE:
-			PRINT "OTHERWISE X=";X
-	ENDCASE
-NEXT`
-				},
-				{ title:"Fizz,Buzz test", code:
-`' IF文テスト
-FOR I = 1 TO 15
-	PRINT I;":";
-	IF !(I MOD 3) && !(I MOD 5) THEN ' 3の倍数かつ5の倍数
-		PRINT "Fizz,Buzz"
-	ELSEIF !(I MOD 3) THEN ' 3の倍数
-		PRINT "Fizz"
-	ELSEIF !(I MOD 5) THEN ' 5の倍数
-		PRINT "Buzz"
-	ELSE
-		PRINT
-	ENDIF
-NEXT
-'想定している実行結果
-'1:
-'2:
-'3:Fizz
-'4:
-'5:Buzz
-'6:Fizz
-'7:
-'8:
-'9:Fizz
-'10:Buzz
-'11:
-'12:Fizz
-'13:
-'14:
-'15:Fizz,Buzz`
-				},
-				{ title:"CONST test", code:
-`' CONST文テスト
-CONST #X=1, #Y=2, #Z="hoge"
-PRINT "#X=";#X, "#Y=";#Y, "#Z=";#Z
-' 配列バージョン
-CONST #A[2,2]=[0,"ONE",2,3.]
-PRINT "#A[2,2]="
-PRINT #A[0,0], #A[1,0]
-PRINT #A[0,1], #A[1,1]
-'想定している実行結果
-'#X=1 #Y=2 #Z=hoge
-'#A[2,2]=
-'0 ONE
-'2 3.000000`
-				},
-				{ title:"ENUM test", code:
-`' ENUM文テスト
-ENUM #X=100, #Y, #Z     ' #Y、#Zは1個前の値に+1したものになる
-VAR I=10
-ENUM #A=I, #B, #C=#X+#B ' 変数でもOK
-ENUM #E=1.5, #F, #G     ' 実数でもOK。ただし文字列は意図しない結果になるので注意
-PRINT "#X=";#X, "#Y=";#Y, "#Z=";#Z
-PRINT "#A=";#A, "#B=";#B, "#C=";#C
-PRINT "#E=";#E, "#F=";#F, "#G=";#G
-'想定している実行結果
-'#X=100 #Y=101 #Z=102
-'#A=10 #B=11 #C=111
-'#E=1.500000 #F=2.500000 #G=3.500000`
-				},
-				{ title:"LValue and operator[] test", code:
-`' 左辺値と[]演算子のテスト
-VAR X$[2] = ["abc", "012345"]
-X$[1][3] = "XY" ' 文字置き換え
-PRINT "X$[1]=";X$[1]
-VAR A,B,C
-A=B=C=10 ' 代入を演算子に
-PRINT "A,B,C=";A,B,C
-A=(B=C)=20 ' 変則テスト
-PRINT "A,B,C=";A,B,C
-'想定している実行結果
-'X$[1]=012XY5
-'A,B,C=10 10 10
-'A,B,C=20 20 10`
-				},
-				{ title:"Read,Data and Restore test", code:
-`' READ、DATA、RESTOREテスト
-VAR V=10
-VAR A,B
-READ A,B:PRINT "A=";A,"B=";B
-READ A,B:PRINT "A=";A,"B=";B
-RESTORE @label ' 読み込み位置、変更
-READ A,B:PRINT "A=";A,"B=";B
-RESTORE "BEGIN" ' 読み込み位置を最初に
-V=20 ' DATAは式として登録しているので、面白いことができる
-READ A,B:PRINT "A=";A,"B=";B
-' データ
-DATA V,V+1 ' 式を評価するDATA
-@label
-DATA 12,13
-'想定している実行結果
-'A=10 B=11
-'A=12 B=13
-'A=12 B=13
-'A=20 B=21`
-				},
-				{ title:"User Function test1", code:
-`' 引数あり、返り値なしのテスト
-DEF FUNC A,B,C
-	PRINT "FUNC A=";A,"B=";B,"C=";C
-END
-VAR X="X", Y="Y", Z[]=[1,2,3]
-FUNC 1,"One",X
-FUNC 2,"Two",Y
-FUNC 3,"Three",Z[0]
-'想定している実行結果
-'FUNC A=1 B=One C=X
-'FUNC A=2 B=Two C=Y
-'FUNC A=3 B=Three C=1`
-				},
-				{ title:"User Function test2", code:
-`' 引数あり、返り値ありのテスト
-DEF ADD(A,B):RETURN A+B:END ' 加算
-DEF MUL(A,B):RETURN A*B:END ' 乗算
-PRINT ADD(1,2), MUL(1,2)
-PRINT ADD("ABC","XYZ")
-' 文字列と整数の加算
-PRINT ADD(111,"XYZ"), ADD("ABC",222)
-'文字列 * 整数は文字列を整数回繰り返したもの
-PRINT MUL("ABC",3)
-'想定している実行結果
-'3 2
-'ABCXYZ
-'111XYZ ABC222
-'ABCABCABC`
-				},
-				{ title:"User Function test3", code:
-`' 参照渡しのテスト
-DEF FUNC OUT A
-	PRINT "A=";A
-	A = A+100
-END
-' 普通の変数
-VAR X = 1
-FUNC OUT X
-PRINT "X=";X
-' 配列の要素
-VAR Y[] = [1,2,3,4]
-FUNC OUT Y[2]
-PRINT "Y[2]=";Y[2]
-'想定している実行結果
-'A=1
-'X=101
-'A=3
-'Y[2]=103`
-				},
-				{ title:"Math Function test", code:
-`' 数学関数 テスト
-OPTION STRICT
-VAR A[] = [1,2,3,4,5,6,7,8]
-VAR X=1.5, Y=123
-PRINT "X=";X, "Y=";Y
-PRINT "INT(X)=";INT(X)      ' 整数に変換。切り捨て
-PRINT "FLOAT(Y)=";FLOAT(Y)  ' 実数に変換
-PRINT "FLOOR(X)=";FLOOR(X)
-PRINT "ROUND(X)=";ROUND(X)
-PRINT "CEIL(X)=";CEIL(X)
-PRINT "ABS(X)=";ABS(X), "ABS(-X)=";ABS(-X) ' 絶対値
-PRINT "SGN(X)=";SGN(X), "SGN(-X)=";SGN(-X) ' 符号
-PRINT "MIN(A)=";MIN(A), "MAX(A)=";MAX(A)
-PRINT "RND(10)=";RND(10), "RND(10)=";RND(10)
-PRINT "RNDF()=";RNDF(), "RNDF()=";RNDF()
-PRINT "SQR(2)=";SQR(2), "SQR(3)=";SQR(3)  ' 平方根
-PRINT "EXP()=";EXP(), "EXP(2)=";EXP(2)
-PRINT "POW(2,3)=";POW(2,3), "POW(10,4)=";POW(10,4)
-PRINT "LOG(2)=";LOG(2), "LOG(1000,10)=";LOG(1000,10)
-PRINT "RAD(180)=";RAD(180)
-PRINT "DEG(3.141592653)=";DEG(3.141592653)
-PRINT "SIN(0)=";SIN(0), "SIN(RAD(90))=";SIN(RAD(90))
-PRINT "COS(0)=";COS(0), "COS(RAD(90))=";COS(RAD(90))
-PRINT "TAN(0)=";TAN(0), "TAN(RAD(45))=";TAN(RAD(45))
-PRINT "ASIN(0)=";ASIN(0), "DEG(ASIN(1))=";DEG(ASIN(1))
-PRINT "DEG(ACOS(0))=";DEG(ACOS(0)), "ACOS(1)=";ACOS(1)
-PRINT "ATAN(1)=";DEG(ATAN(1))
-PRINT "DEG(ATAN(1,0))=";DEG(ATAN(1,0))
-PRINT "SINH(1)=";SINH(1)
-PRINT "COSH(1)=";COSH(1)
-PRINT "TANH(0.5)=";TANH(0.5)
-PRINT "CLASSIFY(1)=";CLASSIFY(1)  ' 普通の数は0
-PRINT "CLASSIFY(POW(10,500))=";CLASSIFY(POW(10,500)) ' ∞は1`
-				},
-				{ title:"String Function test", code:
-`' 文字列関数テスト
-OPTION STRICT
-VAR A[] = [1,2,3,4,5,6,7,8]
-PRINT "ASC(" + CHR$(&H22) + "猫" + CHR$(&H22) + ")=";ASC("猫")
-PRINT "CHR$(ASC(" + CHR$(&H22) + "猫" + CHR$(&H22) + "))=";CHR$(ASC("猫"))
-PRINT "VAL(" + CHR$(&H22) + "123" + CHR$(&H22) + ")=";VAL("123"), "VAL(" + CHR$(&H22) + "1.23" + CHR$(&H22) + ")=";VAL("1.23")
-PRINT "VAL(" + CHR$(&H22) + "1e3" + CHR$(&H22) + ")=";VAL("1e3"), "VAL(" + CHR$(&H22) + "-1.23" + CHR$(&H22) + ")=";VAL("-1.23")
-PRINT "VAL(" + CHR$(&H22) + "-456" + CHR$(&H22) + ")=";VAL("-456"), "VAL(" + CHR$(&H22) + "+1.23" + CHR$(&H22) + ")=";VAL("+1.23")
-PRINT "STR$(12345)=";STR$(12345), "STR$(-12345)=";STR$(-12345)
-PRINT "STR$(0.12)=";STR$(0.12), "STR$(-1.23)=";STR$(-1.23)
-PRINT "STR$(123, 5)=[";STR$(123, 5);"]", "STR$(-123, 5)=[";STR$(-123, 5);"]"
-PRINT "HEX$(&H123, 4)=";HEX$(&H123, 4), "HEX$(-1)=";HEX$(-1)
-PRINT "BIN$(&H123, 16)=";BIN$(&H123, 16)
-PRINT "BIN$(-1)=";BIN$(-1)
-PRINT "LEN(A)=";LEN(A), "LAST(A)=";LAST(A)
-PRINT "MID$(" + CHR$(&H22) + "ABCDEFG" + CHR$(&H22) + ", 3)=";MID$("ABCDEFG",3)
-PRINT "MID$(" + CHR$(&H22) + "ABCDEFG" + CHR$(&H22) + ", 3, 2)=";MID$("ABCDEFG",3, 2)
-PRINT "LEFT$(" + CHR$(&H22) + "ABCDEFG" + CHR$(&H22) + ", 3)=";LEFT$("ABCDEFG",3)
-PRINT "RIGHT$(" + CHR$(&H22) + "ABCDEFG" + CHR$(&H22) + ", 3)=";RIGHT$("ABCDEFG",3)
-PRINT "INSTR(" + CHR$(&H22) + "ABCDEFG" + CHR$(&H22) + ", " + CHR$(&H22) + "CD" + CHR$(&H22) + ")=";INSTR("ABCDEFG","CD")
-PRINT "INSTR(3, " + CHR$(&H22) + "ABCDEFG" + CHR$(&H22) + ", " + CHR$(&H22) + "CD" + CHR$(&H22) + ")=";INSTR(3,"ABCDEFG","CD")
-PRINT "SUBST$(" + CHR$(&H22) + "ABCDEFG" + CHR$(&H22) + ", 1, " + CHR$(&H22) + "123" + CHR$(&H22) + ")=";SUBST$("ABCDEFG",1,"123")
-PRINT "SUBST$(" + CHR$(&H22) + "ABCDEFG" + CHR$(&H22) + ", 1, 2, " + CHR$(&H22) + "123" + CHR$(&H22) + ")=";SUBST$("ABCDEFG",1,2,"123")
-PRINT "DATE$()=";DATE$()
-PRINT "TIME$()=";TIME$()`
-},
-{ title:"Format Function test - string", code:
-`' FORMATテスト 文字列の書式
-VAR X$ = "1234"
-PRINT "[12345678] string format test"
-PRINT FORMAT$("[%8S]", X$),CHR$(&H22);"[%8S]";CHR$(&H22)
-PRINT FORMAT$("[%-8S]", X$),CHR$(&H22);"[%-8S]";CHR$(&H22)
-PRINT FORMAT$("[%08S]", X$),CHR$(&H22);"[%08S]";CHR$(&H22)
-PRINT FORMAT$("[%8.6S]", X$),CHR$(&H22);"[%8.6S]";CHR$(&H22)
-PRINT FORMAT$("[%8.2S]", X$),CHR$(&H22);"[%8.2S]";CHR$(&H22)
-PRINT FORMAT$("[%-8.2S]", X$),CHR$(&H22);"[%-8.2S]";CHR$(&H22)
-PRINT FORMAT$("[%08.6S]", X$),CHR$(&H22);"[%08.6S]";CHR$(&H22)
-PRINT FORMAT$("[%08.2S]", X$),CHR$(&H22);"[%08.2S]";CHR$(&H22)`
-},
-{ title:"Format Function test - dec", code:
-`' FORMATテスト 10進数の書式
-VAR X=123
-PRINT "[123456] dec format test"
-PRINT FORMAT$("[%6D]", X),CHR$(&H22);"[%6D]";CHR$(&H22)
-PRINT FORMAT$("[%-6D]", X),CHR$(&H22);"[%-6D]";CHR$(&H22)
-PRINT FORMAT$("[%06D]", X),CHR$(&H22);"[%06D]";CHR$(&H22)
-PRINT FORMAT$("[%6.4D]", X),CHR$(&H22);"[%6.4D]";CHR$(&H22)
-PRINT FORMAT$("[%-6.4D]", X),CHR$(&H22);"[%-6.4D]";CHR$(&H22)`
-},
-{ title:"Format Function test - hex", code:
-`' FORMATテスト 16進数の書式
-VAR X=&HABC ' "&H"は16進数
-PRINT "[123456] hex format test"
-PRINT FORMAT$("[%6X]", X),CHR$(&H22);"[%6X]";CHR$(&H22)
-PRINT FORMAT$("[%-6X]", X),CHR$(&H22);"[%-6X]";CHR$(&H22)
-PRINT FORMAT$("[%06X]", X),CHR$(&H22);"[%06X]";CHR$(&H22)
-PRINT FORMAT$("[%6.4X]", X),CHR$(&H22);"[%6.4X]";CHR$(&H22)
-PRINT FORMAT$("[%-6.4X]", X),CHR$(&H22);"[%-6.4X]";CHR$(&H22)
-PRINT FORMAT$("[%6x]", X),CHR$(&H22);"[%6x]";CHR$(&H22) ' %xにするとA-Fが小文字に`
-},
-{ title:"Format Function test - oct", code:
-`' FORMATテスト 8進数の書式
-VAR X=&O123 ' "&O"は8進数
-PRINT "[123456] oct format test"
-PRINT FORMAT$("[%6O]", X),CHR$(&H22);"[%6O]";CHR$(&H22) ' "%O"は8進数の書式
-PRINT FORMAT$("[%-6O]", X),CHR$(&H22);"[%-6O]";CHR$(&H22)
-PRINT FORMAT$("[%06O]", X),CHR$(&H22);"[%06O]";CHR$(&H22)
-PRINT FORMAT$("[%6.4O]", X),CHR$(&H22);"[%6.4O]";CHR$(&H22)
-PRINT FORMAT$("[%-6.4O]", X),CHR$(&H22);"[%-6.4O]";CHR$(&H22)`
-},
-{ title:"Format Function test - bin", code:
-`' FORMATテスト 2進数の書式
-VAR X=&B10101010 ' "&B"は2進数
-PRINT "[123456789012] bin format test"
-PRINT FORMAT$("[%12B]", X),CHR$(&H22);"[%12B]";CHR$(&H22) ' "%B"は2進数の書式
-PRINT FORMAT$("[%-12B]", X),CHR$(&H22);"[%-12B]";CHR$(&H22)
-PRINT FORMAT$("[%012B]", X),CHR$(&H22);"[%012B]";CHR$(&H22)
-PRINT FORMAT$("[%12.10B]", X),CHR$(&H22);"[%12.10B]";CHR$(&H22)
-PRINT FORMAT$("[%-12.10B]", X),CHR$(&H22);"[%-12.10B]";CHR$(&H22)`
-},
-{ title:"Format Function test - char", code:
-`' FORMATテスト 文字の書式
-PRINT "[1234] char format test" ' "%C"でコードポイント
-PRINT FORMAT$("[%4C]", ASC("A")),CHR$(&H22);"[%4C]";CHR$(&H22)
-PRINT FORMAT$("[%-4C]", ASC("B")),CHR$(&H22);"[%-4C]";CHR$(&H22)
-PRINT FORMAT$("[%4C]", ASC("猫")),CHR$(&H22);"[%4C]";CHR$(&H22) ' @todo 全角の幅`
-},
-{ title:"Format Function test - real", code:
-`' FORMATテスト 実数の書式
-VAR X=1234.456789
-PRINT "[1234567890123456] real format test" ' "%F"で実数の書式
-PRINT FORMAT$("[%16F]", X),CHR$(&H22);"[%16F]";CHR$(&H22)
-PRINT FORMAT$("[%016F]", X),CHR$(&H22);"[%016F]";CHR$(&H22)
-PRINT FORMAT$("[%+16F]", X),CHR$(&H22);"[%+16F]";CHR$(&H22)
-PRINT FORMAT$("[%+016F]", X),CHR$(&H22);"[%+016F]";CHR$(&H22)
-PRINT FORMAT$("[%-16F]", X),CHR$(&H22);"[%-16F]";CHR$(&H22)
-PRINT FORMAT$("[%16.2F]", X),CHR$(&H22);"[%16.2F]";CHR$(&H22)
-PRINT FORMAT$("[%016.2F]", X),CHR$(&H22);"[%016.2F]";CHR$(&H22)
-PRINT FORMAT$("[%+16.2F]", X),CHR$(&H22);"[%+16.2F]";CHR$(&H22)
-PRINT FORMAT$("[%-16.2F]", X),CHR$(&H22);"[%-16.2F]";CHR$(&H22)
-PRINT FORMAT$("[%16.10F]", X),CHR$(&H22);"[%16.10F]";CHR$(&H22)
-PRINT FORMAT$("[%016.10F]", X),CHR$(&H22);"[%016.10F]";CHR$(&H22)
-PRINT FORMAT$("[%+16.10F]", X),CHR$(&H22);"[%+16.10F]";CHR$(&H22)
-PRINT FORMAT$("[%-16.10F]", X),CHR$(&H22);"[%-16.10F]";CHR$(&H22)
-'想定している実行結果
-'[1234567890123456] real format test
-'[     1234.456789] "[%16F]"
-'[000001234.456789] "[%016F]"
-'[    +1234.456789] "[%+16F]"
-'[+00001234.456789] "[%+016F]"
-'[1234.456789     ] "[%-16F]"
-'[         1234.46] "[%16.2F]"
-'[0000000001234.46] "[%016.2F]"
-'[        +1234.46] "[%+16.2F]"
-'[1234.46         ] "[%-16.2F]"
-'[ 1234.4567890000] "[%16.10F]"
-'[01234.4567890000] "[%016.10F]"
-'[+1234.4567890000] "[%+16.10F]"
-'[1234.4567890000 ] "[%-16.10F]"`
-},
-{ title:"MIN,MAX Function test", code:
-`' MIN()、MAX()の可変長引数のテスト
-PRINT "MIN(1)=";MIN(1), "MAX(1)=";MAX(1)
-PRINT "MIN(1,2,3,4)=";MIN(1,2,3,4), "MAX(1,2,3,4)=";MAX(1,2,3,4)
-VAR X[]=[10,12,30,14]
-VAR Y[]=[11,20,13,40]
-VAR Z[]=[12,13,14,15]
-PRINT "MIN(100,X,Y,Z)=";MIN(100,X,Y,Z) '配列も可、混ざっててもOK
-PRINT "MAX(-100,X,Y,Z)=";MAX(-100,X,Y,Z) '配列も可、混ざっててもOK
-'想定している実行結果
-'MIN(1)=1 MAX(1)=1
-'MIN(1,2,3,4)=1 MAX(1,2,3,4)=4
-'MIN(100,X,Y,Z)=10
-'MAX(-100,X,Y,Z)=12`
-},
-{ title:"SWAP test", code:
-`' SWAPのテスト
-VAR X=1, Y=2
-PRINT "X=";X, "Y=";Y
-SWAP X, Y
-PRINT "X=";X, "Y=";Y
-X=1.0:Y=2.0
-PRINT "X=";X, "Y=";Y
-SWAP X, Y
-PRINT "X=";X, "Y=";Y
-X="One":Y="Twoooo"
-PRINT "X=";X, "Y=";Y
-SWAP X, Y
-PRINT "X=";X, "Y=";Y
-'配列要素
-VAR A[]=[1,10,100], B[]=[2,20,200]
-PRINT "A[1]=";A[1], "B[2]=";B[2]
-SWAP A[1], B[2]
-PRINT "A[1]=";A[1], "B[2]=";B[2]
-'部分文字列
-VAR S$="12335", T$="ABCDEF"
-PRINT "S$[1]=";S$[1], "T$[2]=";T$[2]
-SWAP S$[1], T$[2]
-PRINT "S$[1]=";S$[1], "T$[2]=";T$[2]
-PRINT "S$=";S$, "T$=";T$
-'想定している実行結果
-'X=1 Y=2
-'X=2 Y=1
-'X=1.000000 Y=2.000000
-'X=2.000000 Y=1.000000
-'X=One Y=Twoooo
-'X=Twoooo Y=One
-'A[1]=10 B[2]=200
-'A[1]=200 B[2]=10
-'S$[1]=2 T$[2]=C
-'S$[1]=C T$[2]=2
-'S$=1C335 T$=AB2DEF`
-},
-{ title:"INC,DEC test", code:
-`' INC、DECのテスト
-' 変数の値を加算(INC)、減算(DEC)する
-VAR X=1, Y=10.0
-PRINT "X=";X, "Y=";Y
-INC X:INC Y           ' 1加算
-PRINT "X=";X, "Y=";Y
-INC X, 2:INC Y, 2     ' 2加算
-PRINT "X=";X, "Y=";Y
-DEC X, 2:DEC Y, 2     ' 2減算
-PRINT "X=";X, "Y=";Y
-DEC X:DEC Y           ' 1減算
-PRINT "X=";X, "Y=";Y
-'想定している実行結果
-'X=1 Y=10.000000
-'X=2 Y=11.000000
-'X=4 Y=13.000000
-'X=2 Y=11.000000
-'X=1 Y=10.000000`
-},
-{ title:"UNSHIFT test", code:
-`' UNSHIFTのテスト
-' 最初に要素を追加する
-VAR X[]
-UNSHIFT X, 1:PRINT_ARRAY X
-UNSHIFT X, 2:PRINT_ARRAY X
-UNSHIFT X, 3:PRINT_ARRAY X
-UNSHIFT X, 4:PRINT_ARRAY X
-UNSHIFT X, 5:PRINT_ARRAY X
-VAR A$
-' 対象が文字列の場合、最初に文字を追加する
-UNSHIFT A$, "A":PRINT_ARRAY A$
-UNSHIFT A$, "B":PRINT_ARRAY A$
-UNSHIFT A$, "C":PRINT_ARRAY A$
-UNSHIFT A$, "D":PRINT_ARRAY A$
-UNSHIFT A$, "E":PRINT_ARRAY A$
-' 配列の中身を表示するユーザ定義関数
-DEF PRINT_ARRAY A
-	VAR I
-	FOR I=0 TO LAST(A)
-		PRINT A[I],
-	NEXT
-	PRINT
-END
-'想定している実行結果
-'1
-'2 1
-'3 2 1
-'4 3 2 1
-'5 4 3 2 1
-'A
-'B A
-'C B A
-'D C B A
-'E D C B A`
-},
-{ title:"SHIFT test", code:
-`' SHIFTのテスト
-' 最初の要素を取得し、最初の要素を削除する
-VAR X[]=[1,2,3,4,5]
-PRINT "SHIFT(X)=";SHIFT(X), "LEN(X)=";LEN(X)
-PRINT "SHIFT(X)=";SHIFT(X), "LEN(X)=";LEN(X)
-PRINT "SHIFT(X)=";SHIFT(X), "LEN(X)=";LEN(X)
-PRINT "SHIFT(X)=";SHIFT(X), "LEN(X)=";LEN(X)
-PRINT "SHIFT(X)=";SHIFT(X), "LEN(X)=";LEN(X)
-VAR A$="ABCDE"
-' 対象が文字列の場合、最初の文字を取得し削除する
-PRINT "SHIFT(A$)=";SHIFT(A$), "LEN(A$)=";LEN(A$)
-PRINT "SHIFT(A$)=";SHIFT(A$), "LEN(A$)=";LEN(A$)
-PRINT "SHIFT(A$)=";SHIFT(A$), "LEN(A$)=";LEN(A$)
-PRINT "SHIFT(A$)=";SHIFT(A$), "LEN(A$)=";LEN(A$)
-PRINT "SHIFT(A$)=";SHIFT(A$), "LEN(A$)=";LEN(A$)
-'想定している実行結果
-'SHIFT(X)=1 LEN(X)=4
-'SHIFT(X)=2 LEN(X)=3
-'SHIFT(X)=3 LEN(X)=2
-'SHIFT(X)=4 LEN(X)=1
-'SHIFT(X)=5 LEN(X)=0
-'SHIFT(A$)=A LEN(A$)=4
-'SHIFT(A$)=B LEN(A$)=3
-'SHIFT(A$)=C LEN(A$)=2
-'SHIFT(A$)=D LEN(A$)=1
-'SHIFT(A$)=E LEN(A$)=0`
-},
-{ title:"FILL test", code:
-`' FILLのテスト
-' 配列要素を指定された値で、埋める
-OPTION DEFINT   ' デフォルトを整数型に
-VAR X[6]        ' 整数型の1次元6要素
-                ' 初期値は整数の0
-PRINT_ARRAY(X)
-FILL X, 1       ' 全部1で埋める
-PRINT_ARRAY(X)
-FILL X, 2, 1    'X[1]から最後まで2で埋める
-PRINT_ARRAY(X)
-FILL X, 3, 2, 3 'X[2]から3個、3で埋める
-PRINT_ARRAY(X)
-' 配列の中身を表示するユーザ定義関数
-DEF PRINT_ARRAY(A)
-	VAR I
-	FOR I=0 TO LAST(A)
-		PRINT A[I],
-	NEXT
-	PRINT
-END
-'想定している実行結果
-'0 0 0 0 0 0
-'1 1 1 1 1 1
-'1 2 2 2 2 2
-'1 2 3 3 3 2`
-},
+			// プロジェクトのソースコード
+			var projectSource = [];
+			// 最初はサンプルのプロジェクトを読み込んでおく
+			loadProject([]);
 
-			];
+			// Neko Basic
+			{
+				const callbacks = {
+					output: (x)	=> document.getElementById("wasmOutput").innerHTML += x + "<br>",
+					stateChange: (state) => {
+						let runningState = document.getElementById("runningState");
+						if(state) {
+							document.getElementById("wasmOutput").innerHTML = "";
+							// 実行中になった
+							runningState.innerHTML = "Stop"; // 実行中なので「停止ボタン」
+						} else {
+							runningState.innerHTML = "Execute"; // 停止中なので「実行ボタン」
+						}
+					}
+				};
+				var nb = new NekoBasic(callbacks);
+				/**
+				 * ソースコードをNeko Basicに設定し、実行する
+				 * @param {string} source ソースコード
+				 */
+				function clickExecuteOrStop(source) {
+					if(!nb.isRunning) {
+						// ソースコード設定
+						if(!nb.setSource(0, "", source)) {
+							return; // 失敗した
+						}
+						nb.run(); // 実行
+					} else {
+						nb.stop(); // 実行中なら停止する
+					}
+				}
+			}
+
+			// ページ読み込み後に実行される
+			window.onload = function() {
+				// プロジェクトファイルが変更されたときに呼び出される
+				document.getElementById("projectSelect")
+				.addEventListener('change', (evt) => loadProject(evt.target.files));
+				// ソースコードのファイルが変更されたときに呼び出される
+				document.getElementById("fileSelector")
+				.addEventListener('change', (evt) => changeSourceCodeEditor(projectSource[evt.target.selectedIndex].code));
+				// プログラムの実行、停止ボタン押下時に呼び出される
+				document.getElementById("runningState")
+				.addEventListener('click', () => clickExecuteOrStop(editor.getValue()));
+			}
 			
-			editor.setValue(samples[0].code, -1);
-			let selector = document.getElementById("sampleSelector");
-			for(let sample of samples) {
-				selector.appendChild(new Option(sample.title));
+			/**
+			 * Uint8Arrayのデータを文字列に変換する
+			 * @param {Uint8Array} rawData 生データ
+			 * @return {string} 変換された文字列
+			 */
+			function convertString(rawData) {
+				try {
+					// UTF-8で変換
+					const decoder = new TextDecoder('utf-8', {fatal: true});
+					return decoder.decode(rawData);
+				} catch(e) {
+					// 駄目だったらUTF-16で変換
+					try {
+						const decoder = new TextDecoder('utf-16', {fatal: true});
+						return decoder.decode(rawData);
+					} catch(e) {
+						// それでも駄目だったら諦める
+						return "'unknown code type";
+					}
+				}
 			}
-			selector.onchange = event =>{
-				editor.setValue(samples[selector.selectedIndex].code, -1);
+
+			/**
+			 * パスからファイル名を取得する
+			 * @param {string} fullpath フルパスのファイル名
+			 * @return {string} ファイル名
+			 */
+			function getFilename(fullpath)
+			{
+				const position = fullpath.lastIndexOf('/');
+				if(position >= 0) {
+					return fullpath.substring(position + 1);
+				} else {
+					return '.';
+				}
 			}
-			let execBtn = document.getElementById("runningState");
-			execBtn.addEventListener('click', function() {
-				clickExecuteOrStop( editor.getValue() );
-			})
-const callbacks = {
-	output: (x)	=> document.getElementById("wasmOutput").innerHTML += x + "<br>",
-	stateChange: (state) => {
-		let runningState = document.getElementById("runningState");
-		if(state) {
-			document.getElementById("wasmOutput").innerHTML = "";
-			runningState.innerHTML = "Stop";
-		} else {
-			runningState.innerHTML = "Execute";
-		}
-	}
-};
-var nb = new NekoBasic(callbacks);
-function clickExecuteOrStop(source) {
-	if(!nb.isRunning) {
-		nb.setSource(0, "", source);
-		nb.run();
-	} else {
-		nb.stop();
-	}
-}
+
+			function decompressProjectFile(zip)
+			{
+				const selector = document.getElementById("fileSelector");
+				zip.forEach(function (relativePath, zipEntry) {
+					if(!zipEntry.dir) {
+						const fullpath = zipEntry.name;
+						const filename = getFilename(fullpath);
+						if(filename[0] != '.') {
+							selector.appendChild(new Option(filename));
+							zip.file(fullpath).async("uint8array").then(function (data) {
+								const filePare = {code: convertString(data), filename: filename};
+								projectSource.push(filePare);
+								if(projectSource.length == 1) {
+									// ソースエディタの内容設定
+									changeSourceCodeEditor(projectSource[0].code); 
+								}
+							});
+						}
+					}
+				});
+			}
+
+			// プロジェクトが変更されたときに呼び出される
+			// ・プロジェクトはzipで固められている
+			// ・ファイル名と展開して内容を保持する
+			function loadProject(f) {
+				// ソースコードのファイル選択
+				const selector = document.getElementById("fileSelector");
+				// ソースコードのファイル選択をクリア
+				while(selector.lastChild) { selector.removeChild(selector.lastChild); }
+				// プロジェクトのファイルをクリア
+				projectSource=[];
+				// ソースコードのエディタ内容クリア
+				changeSourceCodeEditor(''); 
+
+				if(f.length == 0) {
+					new JSZip.external.Promise(function (resolve, reject) {
+						// サンプルを読み込む
+						JSZipUtils.getBinaryContent('./samples.zip', function(err, data) {
+							if (err) {
+								reject(err);
+							} else {
+								resolve(data);
+							}
+						});
+					}).then(function (data) {
+						return JSZip.loadAsync(data);
+					}).then(function(zip) {
+						decompressProjectFile(zip);
+					}, function (e) {
+						changeSourceCodeEditor("Error reading ./samples.zip: " + e.message);
+						while(selector.lastChild) { selector.removeChild(selector.lastChild); }
+					});
+				} else {
+					JSZip.loadAsync(f[0])
+					.then(function(zip) {
+						decompressProjectFile(zip);
+					}, function (e) {
+						changeSourceCodeEditor("Error reading " + f[0].name + ": " + e.message);
+						while(selector.lastChild) { selector.removeChild(selector.lastChild); }
+					});
+				}
+			}
+
+			/**
+			 * ソースコードエディタにソースコードを設定
+			 * @param {string} sourceCode エディタに設定するソースコード
+			 */
+			function changeSourceCodeEditor(sourceCode)
+			{
+				editor.setValue(sourceCode, -1);
+			}
 		</script>
 	</body>
 </html>

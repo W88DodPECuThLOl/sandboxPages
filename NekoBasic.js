@@ -46,7 +46,7 @@ class NekoBasic {
 		// ソースを設定する
 		if(!this.wasmNekoBasic.NekoBasicSetSource(slotNo, fileName, memPtr)) {
 			// エラー
-			setRunning(0); // 実行していたら停止する
+			this.#setRunning(0); // 実行していたら停止する
 			return false;
 		}
 		return true;
