@@ -43,6 +43,16 @@
 						} else {
 							runningState.innerHTML = "Execute"; // 停止中なので「実行ボタン」
 						}
+					},
+					/**
+					 */
+					loadTextFile: (filename)=> {
+						for(const proSrc of projectSource) {
+							if(proSrc.filename == filename) {
+								return {result: true, text: proSrc.code};
+							}
+						}
+						return {result: false, text: ""};
 					}
 				};
 				var nb = new NekoBasic(callbacks);

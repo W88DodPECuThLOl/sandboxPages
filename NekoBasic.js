@@ -14,6 +14,7 @@ class NekoBasic {
 
 	#callbackOutput;
 	#callbackStateChange;
+	#callbackLoadTextFile;
 
 	/**
 	 * 文字列をNekoBasicで使用できる文字列へ変換する
@@ -34,6 +35,22 @@ class NekoBasic {
 		return memPtr;
 	}
 
+	/**
+	 * 
+	 * @param {string} nekoString 猫専用文字列
+	 * @param {number} nekoStringSize 終端文字を含まない文字列のサイズ
+	 * @return {string} JSで使用できる文字列
+	 */
+	 #nekoStringToString(nekoString, nekoStringSize)
+	 {
+		 let s = "";
+		 const utf32 = new Uint32Array(this.#memory.buffer, nekoString, nekoStringSize + 1);
+		 for(let i = 0; i <= nekoStringSize; ++i) {
+			 s += String.fromCodePoint(utf32[i]);
+		 }
+		 return s;
+	 }
+ 
 	/**
 	 * ソースを設定する
 	 * @param {*} slotNo スロット番号
@@ -110,6 +127,21 @@ class NekoBasic {
 					// hhmmss
 					const today = new Date();
 					return today.getHours() * 10000 + today.getMinutes() * 100 + today.getSeconds();
+				},
+				loadTextFile: (filenamePtr, filenameSize) => {
+					if(this.#callbackLoadTextFile) {
+						const filename = this.#nekoStringToString(filenamePtr, filenameSize);
+						const rc = this.#callbackLoadTextFile(filename);
+						if(rc.result) {
+							// 成功
+							return this.#convertUTF32(rc.text);
+						} else {
+							return 0; // 失敗した
+						}
+					} else {
+						// コールバック関数が登録されていない
+						return 0;
+					}
 				}
 			},
 			Math: {
@@ -218,6 +250,7 @@ class NekoBasic {
 	{
 		this.#callbackOutput = callbacks.output;
 		this.#callbackStateChange = callbacks.stateChange;
+		this.#callbackLoadTextFile = callbacks.loadTextFile;
 		this.#memory = new WebAssembly.Memory({ initial: ~~(this.#heapSize/(64*1024)), maximum: ~~(this.#heapSize/(64*1024) + 1) });
 		this.#setup();
 	}
