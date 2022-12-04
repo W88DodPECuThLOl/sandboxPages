@@ -44,8 +44,8 @@ class NekoBasic {
 	 #nekoStringToString(nekoString, nekoStringSize)
 	 {
 		 let s = "";
-		 const utf32 = new Uint32Array(this.#memory.buffer, nekoString, nekoStringSize + 1);
-		 for(let i = 0; i <= nekoStringSize; ++i) {
+		 const utf32 = new Uint32Array(this.#memory.buffer, nekoString, nekoStringSize);
+		 for(let i = 0; i < nekoStringSize; ++i) {
 			 s += String.fromCodePoint(utf32[i]);
 		 }
 		 return s;
