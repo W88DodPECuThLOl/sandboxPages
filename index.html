@@ -4,12 +4,15 @@
 		<meta charset=”UTF-8″>
 		<title>猫の砂場</title>
 		<script src="NekoBasic.js"></script>
+		<script src="nbExtTextIO.js"></script>
+		<script src="nbExtGraphics.js"></script>
 		<script src="jszip.min.js"></script>
 		<script src="jszip-utils.min.js"></script>
+		<link rel="stylesheet" href="nb.css">
 	</head>
 	<body>
 		<h1>Neko Basic</h1>
-		<tt><div id="wasmOutput" style="height: 240px;min-width: 400px;overflow-y: scroll;"></div></tt>
+		<div id="wasmOutput" class="console"></div>
 		<input type="file" id="projectSelect" accept=".zip">
 		<select id="fileSelector"></select>
 		<button id="runningState">Execute</button>
@@ -24,7 +27,13 @@
 				minLines: 2
 			});
 			editor.setFontSize(8);
-			
+
+			// Canvasを作成してbodyに追加します。
+			//const canvas = document.getElementById('canvas');
+			//var gr = new nbExtGraphics(canvas);
+
+			var textIO = new nbExtTextIO(50,30);
+
 			// プロジェクトのソースコード
 			var projectSource = [];
 			// 最初はサンプルのプロジェクトを読み込んでおく
@@ -33,11 +42,11 @@
 			// Neko Basic
 			{
 				const callbacks = {
-					output: (x)	=> document.getElementById("wasmOutput").innerHTML += x + "<br>",
+					putchar: (x) => textIO.putch32(x),
+					vSync: ()=>document.getElementById("wasmOutput").innerHTML = textIO.draw(),
 					stateChange: (state) => {
 						let runningState = document.getElementById("runningState");
 						if(state) {
-							document.getElementById("wasmOutput").innerHTML = "";
 							// 実行中になった
 							runningState.innerHTML = "Stop"; // 実行中なので「停止ボタン」
 						} else {

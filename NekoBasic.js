@@ -12,9 +12,10 @@ class NekoBasic {
 
 	#handleAnimationFrame;
 
-	#callbackOutput;
+	#callbackPutchar;
 	#callbackStateChange;
 	#callbackLoadTextFile;
+	#callbackVSync;
 
 	/**
 	 * 文字列をNekoBasicで使用できる文字列へ変換する
@@ -84,29 +85,32 @@ class NekoBasic {
 		const importObject = {
 			env: { memory: this.#memory },
 			js: {
-				// UTF-32の文字を表示する
-				// i32 ch
+				/**
+				 * UTF-32の文字を表示する
+				 * @param {number} ch UTF-32の文字
+				 */
 				putchar: (ch) => {
-					if(ch!=10) {
-						if(ch==32) {
-							this.#oneLineText += "&nbsp;";
-						} else {
-							this.#oneLineText += String.fromCodePoint(ch);
-						}
-					} else {
-						if(this.#callbackOutput) {
-							this.#callbackOutput(this.#oneLineText)
-						}
-						this.#oneLineText = "";
+					if(this.#callbackPutchar) {
+						this.#callbackPutchar(ch);
 					}
 				},
-				// doubleを表示する
-				// f64 value
-				printDouble: (value) => { this.#oneLineText += value.toFixed(6); },
-				// 実数を指定された固定小数点形式で文字列に変換する
-				// f64 value
-				// s32 digits
-				// ret pointer
+				/**
+				 * doubleを表示する
+				 * @param {number} value 表示する実数
+				 */
+				printDouble: (value) => {
+					if(this.#callbackPutchar) {
+						for (let codePoint of value.toFixed(6)) {
+							this.#callbackPutchar(codePoint.codePointAt(0));
+						}
+					}
+				},
+				/**
+				 * 実数を指定された固定小数点形式で文字列に変換する
+				 * @param {number} value 変換する実数
+				 * @param {number} digits 小数点部分の桁数
+				 * @returns pointer
+				 */
 				floatToString: (value, digits) => {
 					const source = value.toFixed(digits);
 					const memPtr = this.wasmNekoBasic.NekoBasicMalloc(source.length + 1);
@@ -170,7 +174,7 @@ class NekoBasic {
 					if(x === Number.NEGATIVE_INFINITY) return true;
 					return false;
 				},
-				isNan: (x) => { return Number.isNaN() ? true : false; },
+				isNan: (x) => { return Number.isNaN(x) ? true : false; },
 			}
 		};
 		WebAssembly.instantiateStreaming(fetch("NekoBasic.wasm"), importObject).then(
@@ -188,11 +192,20 @@ class NekoBasic {
 	 * @returns 
 	 */
 	#update() {
+		if(this.#callbackVSync) {
+			this.#callbackVSync();
+		}
 		if(this.isRunning) {
 			for(var i = 0; i < 200; ++i) {
 				if(!this.wasmNekoBasic.NekoBasicExecuteOneStep()) {
 					// 実行完了、または、失敗したので、停止する
 					this.#setRunning(0);
+					for (let codePoint of "OK\n") {
+						this.#callbackPutchar(codePoint.codePointAt(0));
+					}
+					if(this.#callbackVSync) {
+						this.#callbackVSync();
+					}
 					return;
 				}
 			}
@@ -248,10 +261,20 @@ class NekoBasic {
 
 	constructor(callbacks)
 	{
-		this.#callbackOutput = callbacks.output;
 		this.#callbackStateChange = callbacks.stateChange;
 		this.#callbackLoadTextFile = callbacks.loadTextFile;
+		this.#callbackPutchar = callbacks.putchar;
+		this.#callbackVSync = callbacks.vSync;
 		this.#memory = new WebAssembly.Memory({ initial: ~~(this.#heapSize/(64*1024)), maximum: ~~(this.#heapSize/(64*1024) + 1) });
+
+		if(callbacks.putchar && callbacks.vSync) {
+			for (let codePoint of "Neko Basic Version 0.00.00\nOK\n") {
+				callbacks.putchar(codePoint.codePointAt(0));
+			}
+			callbacks.vSync();
+		}
+		
+
 		this.#setup();
 	}
 }
