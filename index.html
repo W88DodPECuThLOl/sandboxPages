@@ -42,7 +42,7 @@
 			// Neko Basic
 			{
 				const callbacks = {
-					putchar: (x) => textIO.putch32(x),
+					putchar: (x) => textIO.putch32(4, x),
 					vSync: ()=>document.getElementById("wasmOutput").innerHTML = textIO.draw(),
 					stateChange: (state) => {
 						let runningState = document.getElementById("runningState");
@@ -65,7 +65,8 @@
 						return {result: false, text: ""};
 					}
 				};
-				var nb = new NekoBasic(callbacks);
+				var nb = new NekoBasic(callbacks,[textIO]);
+
 				/**
 				 * ソースコードをNeko Basicに設定し、実行する
 				 * @param {string} source ソースコード
